@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  @apply bg-ink-900 text-ink-50 font-sans antialiased;
+  font-feature-settings: 'ss01', 'cv11';
+}
+
+/* Numeric tabular lining for money values */
+@layer components {
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Subtle scrollbar */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #2c3750; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #4a5568; }
+
+@layer components {
+  /* Card */
+  .card {
+    @apply bg-ink-800 border border-ink-700 rounded-xl;
+  }
+
+  /* Button */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 disabled:opacity-40 disabled:cursor-not-allowed;
+  }
+  .btn-primary { @apply btn bg-accent text-ink-900 hover:bg-accent-dim; }
+  .btn-ghost { @apply btn bg-ink-700 hover:bg-ink-600 text-ink-50; }
+  .btn-danger { @apply btn bg-danger/90 text-white hover:bg-danger; }
+
+  /* Form inputs */
+  .input {
+    @apply w-full rounded-lg bg-ink-700 border border-ink-600 px-3 py-2 text-ink-50 focus:outline-none focus:border-accent;
+  }
+}
