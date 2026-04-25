@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db';
 import { resetDatabase, wipeDatabase } from '../db/seed';
@@ -8,11 +8,17 @@ import {
   fileSyncSupported, pickNewFile, openExistingFile, clearFileHandle,
   writeToFile, downloadBackup, uploadBackup,
 } from '../sync/fileSync';
+import { parseXlsx, commitImport, type ImportPreview as ImportPreviewData } from '../sync/xlsxImport';
+import { ImportPreview } from '../components/ImportPreview';
 
 export default function Settings() {
   const settings = useLiveQuery(() => db.settings.get(1), []);
   const { fileStatus, fileName, setFileStatus, showToast, markSaved } = useAppUI();
   const uploadRef = useRef<HTMLInputElement>(null);
+  const xlsxRef = useRef<HTMLInputElement>(null);
+  const [xlsxPreview, setXlsxPreview] = useState<ImportPreviewData | null>(null);
+  const [xlsxParsing, setXlsxParsing] = useState(false);
+  const [xlsxImporting, setXlsxImporting] = useState(false);
 
   if (!settings) return <div className="text-ink-300">Loading…</div>;
 
@@ -87,6 +93,37 @@ export default function Settings() {
     setTimeout(() => window.location.reload(), 800);
   }
 
+  async function handleXlsxFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    setXlsxParsing(true);
+    try {
+      const parsed = await parseXlsx(file);
+      setXlsxPreview(parsed);
+    } catch (err) {
+      console.error('Parse failed', err);
+      showToast(`Could not read file: ${err instanceof Error ? err.message : String(err)}`, 'error');
+    } finally {
+      setXlsxParsing(false);
+    }
+  }
+
+  async function handleXlsxConfirm() {
+    if (!xlsxPreview) return;
+    if (!confirm('Replace ALL current data with the contents of this file?')) return;
+    setXlsxImporting(true);
+    try {
+      await commitImport(xlsxPreview);
+      showToast('Import complete. Reloading…', 'success');
+      setTimeout(() => window.location.reload(), 800);
+    } catch (err) {
+      console.error('Import failed', err);
+      showToast(`Import failed: ${err instanceof Error ? err.message : String(err)}`, 'error');
+      setXlsxImporting(false);
+    }
+  }
+
   async function handleWipe() {
     if (!confirm('Wipe ALL data to a completely empty workspace? No seed data, no sample accounts. You will start from scratch.')) return;
     if (!confirm('Really? This cannot be undone.')) return;
@@ -152,6 +189,39 @@ export default function Settings() {
             )}
           </div>
         </div>
+      </Section>
+
+      <Section title="Bulk Setup From File">
+        <div className="text-xs text-ink-300 mb-3">
+          Replace all current data with an Excel workbook. Download the template, fill it in (Excel, Numbers, or Google Sheets all work), upload it here.
+          You'll see a validation preview before anything is written.
+        </div>
+        {!xlsxPreview ? (
+          <div className="card p-5 flex flex-wrap gap-2">
+            <a href="/finance-setup-template.xlsx" download className="btn-ghost">Download template (.xlsx)</a>
+            <button
+              className="btn-primary"
+              disabled={xlsxParsing}
+              onClick={() => xlsxRef.current?.click()}
+            >
+              {xlsxParsing ? 'Reading file…' : 'Upload filled file…'}
+            </button>
+            <input
+              ref={xlsxRef}
+              type="file"
+              accept=".xlsx"
+              className="hidden"
+              onChange={handleXlsxFile}
+            />
+          </div>
+        ) : (
+          <ImportPreview
+            preview={xlsxPreview}
+            onConfirm={handleXlsxConfirm}
+            onCancel={() => setXlsxPreview(null)}
+            busy={xlsxImporting}
+          />
+        )}
       </Section>
 
       <Section title="Manual Backup">

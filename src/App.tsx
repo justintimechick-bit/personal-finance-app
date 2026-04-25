@@ -1,5 +1,5 @@
-import { useEffect } from 'react';
-import { Route, Routes } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import Layout from './components/Layout';
 import Dashboard from './screens/Dashboard';
 import Payday from './screens/Payday';
@@ -7,7 +7,8 @@ import Accounts from './screens/Accounts';
 import Manage from './screens/Manage';
 import Trends from './screens/Trends';
 import Settings from './screens/Settings';
-import { isFirstLaunch, seedDatabase } from './db';
+import Onboarding from './screens/Onboarding';
+import { isFirstLaunch } from './db';
 import { useAppUI } from './store/useAppStore';
 import { rehydrateFromFile, getCurrentFileName, scheduleAutoSave } from './sync/fileSync';
 import { db } from './db';
@@ -16,8 +17,8 @@ import { db } from './db';
 // ensures bootstrap + hook registration only happens once per page load.
 let bootstrapStarted = false;
 
-function useBootstrap() {
-  const { setBootstrapping, setFileStatus, markSaved, showToast } = useAppUI();
+function useBootstrap(setNeedsOnboarding: (v: boolean) => void) {
+  const { setBootstrapping, setFileStatus, markSaved } = useAppUI();
 
   useEffect(() => {
     if (bootstrapStarted) return;
@@ -38,11 +39,10 @@ function useBootstrap() {
         }
       }
 
-      // Step 2: If the DB is still empty, seed with the initial template data
+      // Step 2: If the DB is still empty (and not flagged "wiped" intentionally), route to onboarding
       const first = await isFirstLaunch();
       if (first) {
-        await seedDatabase();
-        showToast('Welcome! Your data has been initialized from the template.', 'info');
+        setNeedsOnboarding(true);
       }
 
       // Step 3: Set up auto-save hook — any DB write triggers a debounced save
@@ -58,11 +58,20 @@ function useBootstrap() {
 
       setBootstrapping(false);
     })();
-  }, [setBootstrapping, setFileStatus, markSaved, showToast]);
+  }, [setBootstrapping, setFileStatus, markSaved, setNeedsOnboarding]);
+}
+
+function OnboardingGate({ needsOnboarding }: { needsOnboarding: boolean }) {
+  const location = useLocation();
+  if (needsOnboarding && location.pathname !== '/onboarding') {
+    return <Navigate to="/onboarding" replace />;
+  }
+  return null;
 }
 
 export default function App() {
-  useBootstrap();
+  const [needsOnboarding, setNeedsOnboarding] = useState(false);
+  useBootstrap(setNeedsOnboarding);
   const isBootstrapping = useAppUI(s => s.isBootstrapping);
 
   if (isBootstrapping) {
@@ -77,15 +86,19 @@ export default function App() {
   }
 
   return (
-    <Routes>
-      <Route element={<Layout />}>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/payday" element={<Payday />} />
-        <Route path="/accounts" element={<Accounts />} />
-        <Route path="/manage" element={<Manage />} />
-        <Route path="/trends" element={<Trends />} />
-        <Route path="/settings" element={<Settings />} />
-      </Route>
-    </Routes>
+    <>
+      <OnboardingGate needsOnboarding={needsOnboarding} />
+      <Routes>
+        <Route path="/onboarding" element={<Onboarding />} />
+        <Route element={<Layout />}>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/payday" element={<Payday />} />
+          <Route path="/accounts" element={<Accounts />} />
+          <Route path="/manage" element={<Manage />} />
+          <Route path="/trends" element={<Trends />} />
+          <Route path="/settings" element={<Settings />} />
+        </Route>
+      </Routes>
+    </>
   );
 }

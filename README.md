@@ -1,127 +1,117 @@
 # Personal Finance App
 
-A local-first personal finance tracker with paycheck waterfall allocation.
+A local-first personal finance tracker. You log paychecks, manually allocate them across your accounts and debts, and watch your net worth (and trends) over time. No backend, no signup — your data lives in your browser's IndexedDB and an optional JSON file on your filesystem.
 
-Data lives in two places: IndexedDB (your browser) and a JSON file on your Mac's filesystem. Every change auto-saves to both.
+## Features
 
-## What's in here
+- **Dashboard** — net worth, liquid / invested / other / debt rollups, CC runway warning, savings rate YTD, tier suggestions
+- **Payday** — log a paycheck and split it across your accounts and liability paydowns. Auto-reserves bank-transfer expenses (rent, insurance, etc.) in checking. Live "remaining" math; "Use suggested" pre-fills from your tier waterfall (suggestion only, never auto-applied)
+- **Accounts** — edit balances, drag-reorder for the Payday display, mark accounts as "not opened yet"
+- **Manage** — configure income sources, fixed expenses, and the (optional) tier waterfall used to generate suggestions
+- **Trends** — multi-line chart of net worth, liquid, debt, and credit-card balances over time
+- **Settings** — file sync, app preferences, bulk import, manual JSON backup, danger-zone reset/wipe
 
-- **Dashboard** — net worth, tier progress, CC runway, savings rate
-- **Payday** — enter a paycheck, preview the cascade, apply to update balances
-- **Accounts** — view and edit account balances and liabilities
-- **Manage** — configure income, expenses, and the allocation waterfall
-- **Settings** — file sync, preferences, backup/restore
-
-## Setup
-
-### 1. Install dependencies
+## Setup (for new users)
 
 ```bash
+git clone <repo-url> personal-finance-app
 cd personal-finance-app
 npm install
-```
-
-### 2. Run locally
-
-```bash
 npm run dev
 ```
 
-Open http://localhost:5173 in Chrome (required for file sync).
+Open http://localhost:5173 in **Chrome** or **Edge** (file sync uses the File System Access API).
 
-### 3. First launch
+### First launch
 
-1. Go to **Settings → Local File Sync**
-2. Click **"Create new file…"**
-3. Pick a location — `~/Documents/Finance/finance.json` or inside `~/Library/Mobile Documents/com~apple~CloudDocs/` (iCloud Drive) for cross-device sync
-4. The app saves to that file on every change
-5. The indicator in the sidebar shows sync status
+You'll land on the **Onboarding** screen with three options:
 
-If you ever open the app on a different browser profile or machine, use **"Open existing file…"** to point it at your `.json` and your data comes right back.
+1. **Use sample template** — populates a realistic example dataset (Chase Checking, Roth IRA, biweekly paycheck, etc.) so you can poke around. You can edit or wipe later.
+2. **Import from Excel** — download the `.xlsx` template, fill in your real numbers in Excel/Numbers/Sheets, upload it back. Validates row-by-row before applying. Best path if you have your data somewhere already.
+3. **Start from scratch** — empty workspace; you add accounts, liabilities, income, and expenses one at a time.
+
+### Linking a sync file (recommended)
+
+Go to **Settings → Local File Sync → Create new file…** and pick a path (e.g., inside iCloud Drive). Every change auto-saves to that file. To use the same data on another browser/machine, click **Open existing file…** and point at the same `.json`.
+
+## Daily flow
+
+1. **Payday** — paste your net amount, split it across accounts (HYSA, Roth, brokerage, etc.) and any liability paydowns. The Chase Checking row pre-fills with the amount needed to cover this period's bank-transfer expenses (rent, car insurance, student loan auto-pays). Click **+ Fill remainder** on a row to dump the rest there. Apply unlocks when **Remaining = $0**.
+2. **Accounts** — when a real-world balance drifts from what the app projects, click the row to edit it directly.
+3. **Trends** — every applied paycheck logs a snapshot, so you'll see the four lines (net worth / liquid / debt / credit cards) tick forward.
+
+The app records what *should* happen; you still need to physically move the money (HYSA transfer, Roth contribution, CC payment).
+
+## Bulk import format
+
+The xlsx template (`public/finance-setup-template.xlsx`) has one sheet per entity:
+
+| Sheet | Required columns |
+|---|---|
+| Accounts | name, type, balance |
+| Liabilities | name, type, balance, apr, minimumPayment, isRevolving, isActive |
+| Income | name, sourceType, amount, cadence, depositAccount, isActive |
+| Expenses | name, category, amount, cadence, paymentMethod, isActive |
+| Tiers *(optional)* | priority, name, cap, capType, targetAccount, resetCadence, isActive |
+
+The README sheet inside the workbook lists allowed enum values. Cross-references (`Income.depositAccount`, `Tier.targetAccount`) must match an `Accounts.name` row in the same file. Validation is row-by-row with clear error messages — no partial imports.
+
+To regenerate the template (e.g., after adding a field):
+
+```bash
+node scripts/generate-template.mjs
+```
+
+## Data model
+
+Stored in IndexedDB via Dexie:
+
+- `accounts` — checking, HYSA, Roth, brokerage, cash, other
+- `liabilities` — credit cards, student loans, auto loans, etc.
+- `incomeSources` — paychecks and ad-hoc income
+- `fixedExpenses` — recurring outflows. `paymentMethod` of `Bank Transfer` reserves cash in checking each paycheck; `Credit Card` grows the CC balance
+- `tiers` — priority-ordered allocation suggestions (not auto-applied)
+- `paycheckEvents` — log of each applied paycheck and its allocations (per-account or per-liability)
+- `netWorthSnapshots` — captured on every paycheck; powers the Trends chart
+- `settings` — CC reserve buffer, Roth cap, target savings rate, etc.
+
+`exportAllData()` / `importAllData()` round-trip the whole DB through a single JSON object — that's what file sync and the Manual Backup buttons use.
+
+## Browser support
+
+| Browser | Status |
+|---|---|
+| Chrome / Edge | Full support, including auto file sync |
+| Safari / Firefox | App works; File System Access API not available — use **Settings → Manual Backup → Download / Upload** instead |
+
+## Resetting
+
+**Settings → Danger Zone**:
+- **Reset to seed data** — re-plants the sample template (wipes paycheck history & balance changes).
+- **Wipe all data (empty)** — clears every table; next reload lands on Onboarding so you can re-import or start over. Use this before recording a screencast or sharing screenshots.
 
 ## Deploy to Vercel
-
-### Option A — From the CLI
 
 ```bash
 npm i -g vercel
 vercel
 ```
 
-Answer the prompts (new project, default settings). Your app is live at `your-project.vercel.app`.
+Or import the repo from vercel.com (Vite is auto-detected). The deployed app runs from Vercel; your data still lives in your browser.
 
-### Option B — From GitHub
-
-1. Push this folder to a GitHub repo (private recommended since this is your data)
-2. Go to vercel.com → New Project → Import your repo
-3. Framework preset: Vite (auto-detected)
-4. Deploy
-
-Open the deployed URL in Chrome on your Mac. First launch, link it to your local `.json` file like in step 3 above. The **app code** runs from Vercel; your **data** stays on your Mac.
-
-### Domain tip
-
-Once deployed, bookmark the Vercel URL. If you later add a custom domain, the data doesn't follow automatically (IndexedDB is per-origin) — but your linked file does. Just open the new URL and point it at the same file.
-
-## How the waterfall works
-
-Every paycheck cascades through tiers in priority order:
-
-1. **Tier 0 — CC Float Reserve**: Reserves cash in checking equal to outstanding CC balance + buffer. Money "stays" in checking, doesn't transfer.
-2. **Tier 1 — Starter Emergency Fund**: Fill HYSA to $1,000.
-3. **Tier 2 — Full Emergency Fund**: Top HYSA to $5,000 total.
-4. **Tier 3 — Roth IRA**: Annual cap of $7,000, resets Jan 1.
-5. **Tier 4 — Taxable Brokerage**: Catches everything left over.
-
-Before cascading, bank-transfer expenses (like student loans and insurance) are deducted from the paycheck. Credit-card expenses don't reduce allocable income directly; they build up on the CC and get paid off via the Tier 0 reserve.
-
-When you click **Apply paycheck**, the app:
-- Credits your checking with (net − bank expenses)
-- Debits checking and credits target accounts for each cascading tier
-- Logs the event for YTD tracking
-- Snapshots net worth
-
-You still need to **physically move the money** (initiate the HYSA transfer, Roth contribution, etc.) to match what the app recorded.
-
-## Data model
-
-All data is stored in IndexedDB via Dexie. The JSON export/sync preserves everything verbatim. Tables:
-
-- `accounts` — checking, HYSA, Roth, brokerage
-- `liabilities` — CCs and loans
-- `incomeSources` — paychecks and bonuses
-- `fixedExpenses` — recurring outflows
-- `tiers` — the allocation waterfall config
-- `paycheckEvents` — log of each applied paycheck
-- `netWorthSnapshots` — net worth history for the chart
-- `settings` — app-level preferences
-
-## Browser compatibility
-
-- **Chrome / Edge** — Full support, including auto file sync.
-- **Safari** — App works, but the File System Access API is not supported. Use download/upload backups from Settings instead.
-- **Firefox** — Same as Safari.
-
-## Resetting
-
-If you want to start over with the initial seed data, go to **Settings → Danger Zone → Reset to seed data**.
-
-## Adding a new year's Roth cap
-
-When the IRS raises the Roth IRA contribution limit (e.g., to $7,500 for 2027), go to **Settings → App Preferences** and update the "Roth Annual Cap" field. The Tier 3 cascade uses that value.
-
-## When your student loans get paid off
-
-Go to **Manage → Expenses**, uncheck "Active" on the Student Loan Payment row. The allocator will immediately stop deducting it, freeing ~$185 per biweekly paycheck to cascade to your tiers. Also go to **Accounts**, uncheck "Active" on the Student Loans liability, so net worth reflects the payoff.
+> Note: Each origin has its own IndexedDB, so opening the deployed URL on a fresh browser shows an empty workspace. Use **Open existing file…** to point at your linked JSON, or upload your last backup.
 
 ## Backup strategy
 
-- **Primary**: Your linked `.json` file. Put it in iCloud Drive for automatic backup.
-- **Fallback**: Periodically click **Settings → Download backup** and keep a dated copy somewhere safe.
-- If you ever lose the file, you can restore from the most recent download.
+- **Primary**: Linked sync file in iCloud Drive (or Dropbox/Drive). Every change auto-saves.
+- **Fallback**: Periodically click **Settings → Manual Backup → Download backup** and stash dated copies somewhere safe.
 
 ## Troubleshooting
 
-- **Sidebar shows "File permission needed"**: Chrome revoked access after a long idle period. Go to Settings and click "Save now" or re-link the file.
-- **Nothing shows up after deploying**: Vercel served a fresh origin, which has an empty IndexedDB. Click "Open existing file…" in Settings to restore your data.
-- **Data mismatch between app and real accounts**: Go to Accounts and manually update balances to match reality. The app's projected balance is just a projection, not a source of truth.
+- **"File permission needed" in sidebar** — Chrome revoked access after long idle. Click **Save now** in Settings or re-link.
+- **Empty app after deploying** — fresh origin = empty IndexedDB. Restore via **Open existing file…** or **Upload backup**.
+- **"Apply paycheck failed: object store not found"** — your IndexedDB is from an older schema. Wipe via Settings → Danger Zone, then reload.
+
+## Tech stack
+
+React 18 + TypeScript + Vite, Tailwind for styling, Dexie for IndexedDB, Recharts for charts, Zustand for app-level UI state, `read-excel-file` for `.xlsx` import (lazy-loaded). No backend, no auth, no telemetry.

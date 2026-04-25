@@ -24,6 +24,7 @@ export default function Payday() {
   const [notes, setNotes] = useState<string>('');
   const [splits, setSplits] = useState<Record<number, number>>({});
   const [liabilitySplits, setLiabilitySplits] = useState<Record<number, number>>({});
+  const [expandedHistory, setExpandedHistory] = useState<Set<number>>(new Set());
   const { showToast } = useAppUI();
 
   const activeSources = (incomeSources ?? []).filter(s => s.isActive);
@@ -445,16 +446,71 @@ export default function Payday() {
                 acctCount > 0 ? `${acctCount} account${acctCount === 1 ? '' : 's'}` : null,
                 liabCount > 0 ? `${liabCount} liabilit${liabCount === 1 ? 'y' : 'ies'}` : null,
               ].filter(Boolean);
+              const isOpen = expandedHistory.has(p.id);
+              const allocSum = p.allocations.reduce((s, a) => s + a.amount, 0);
               return (
-                <div key={p.id} className="p-4 flex items-center justify-between">
-                  <div>
-                    <div className="font-medium">{p.source}</div>
-                    <div className="text-xs text-ink-300">{fmtDate(p.date)} · {parts.join(' · ') || 'no allocations'}</div>
-                  </div>
-                  <div className="text-right tabular">
-                    <div><Money amount={p.netAmount} /></div>
-                    <div className="text-xs text-ink-300">net</div>
-                  </div>
+                <div key={p.id}>
+                  <button
+                    className="w-full p-4 flex items-center justify-between hover:bg-ink-700/30 transition-colors text-left"
+                    onClick={() => setExpandedHistory(prev => {
+                      const next = new Set(prev);
+                      if (next.has(p.id)) next.delete(p.id); else next.add(p.id);
+                      return next;
+                    })}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className={`text-ink-400 text-xs transition-transform ${isOpen ? 'rotate-90' : ''}`}>▶</span>
+                      <div>
+                        <div className="font-medium">{p.source}</div>
+                        <div className="text-xs text-ink-300">{fmtDate(p.date)} · {parts.join(' · ') || 'no allocations'}</div>
+                      </div>
+                    </div>
+                    <div className="text-right tabular">
+                      <div><Money amount={p.netAmount} /></div>
+                      <div className="text-xs text-ink-300">net</div>
+                    </div>
+                  </button>
+                  {isOpen && (
+                    <div className="px-4 pb-4 pl-10 text-xs">
+                      <div className="bg-ink-900/40 rounded-lg border border-ink-700 divide-y divide-ink-700">
+                        {p.allocations.length === 0 && (
+                          <div className="p-3 text-ink-400 italic">No allocations recorded.</div>
+                        )}
+                        {p.allocations.map((a, idx) => (
+                          <div key={idx} className="p-3 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              {a.targetAccount ? (
+                                <>
+                                  <span className="text-[10px] uppercase tracking-wider text-accent bg-accent/10 px-1.5 py-0.5 rounded">to account</span>
+                                  <span className="text-ink-50">{a.targetAccount}</span>
+                                </>
+                              ) : (
+                                <>
+                                  <span className="text-[10px] uppercase tracking-wider text-warn bg-warn/10 px-1.5 py-0.5 rounded">paydown</span>
+                                  <span className="text-ink-50">{a.targetLiability}</span>
+                                </>
+                              )}
+                              {a.tierName && <span className="text-ink-400">via tier "{a.tierName}"</span>}
+                            </div>
+                            <div className="tabular text-ink-50">
+                              <Money amount={a.amount} />
+                            </div>
+                          </div>
+                        ))}
+                        <div className="p-3 flex items-center justify-between text-ink-300">
+                          <span>Bank-transfer reserve (left checking)</span>
+                          <span className="tabular">-<Money amount={p.bankExpensesPaid} /></span>
+                        </div>
+                        <div className="p-3 flex items-center justify-between text-ink-400">
+                          <span>Sum of allocations</span>
+                          <span className="tabular"><Money amount={allocSum} /></span>
+                        </div>
+                        {p.notes && (
+                          <div className="p-3 text-ink-300 italic">"{p.notes}"</div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             })}

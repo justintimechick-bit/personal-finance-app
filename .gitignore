@@ -3,4 +3,10 @@ dist
 .DS_Store
 .vscode
 .vercel
+.vite
 *.log
+tsconfig.tsbuildinfo
+# personal sync files — never commit your own finance data
+finance.json
+finance-*.json
+backup-*.json
