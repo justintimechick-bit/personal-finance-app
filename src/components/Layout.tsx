@@ -4,7 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db';
 import { useAppUI } from '../store/useAppStore';
 import {
-  scheduleAutoSave, saveToDrive, signIn, downloadBackup, isConfigured,
+  scheduleAutoSave, saveToDrive, loadFromDrive, signIn, downloadBackup, isConfigured,
 } from '../sync/driveSync';
 
 const NAV = [
@@ -44,12 +44,18 @@ export default function Layout() {
     try {
       const user = await signIn();
       setDriveStatus('signed_in', user);
-      const res = await saveToDrive();
-      if (res.ok) {
+      // Load existing remote data first — this is the canonical source of truth.
+      // Only push local data up when Drive is genuinely empty (first-ever sign-in).
+      const load = await loadFromDrive();
+      if (load.ok && !load.emptyRemote) {
         markSynced();
-        showToast(`Signed in as ${user.email}`, 'success');
+        showToast(`Welcome back, ${user.name}. Loaded data from Drive.`, 'success');
+      } else if (load.ok && load.emptyRemote) {
+        const save = await saveToDrive();
+        if (save.ok) { markSynced(); showToast(`Signed in as ${user.email}. Local data synced to Drive.`, 'success'); }
+        else showToast(`Signed in but sync failed: ${save.reason}`, 'error');
       } else {
-        showToast(`Signed in but sync failed: ${res.reason}`, 'error');
+        showToast(`Signed in but couldn't load from Drive: ${load.reason}`, 'error');
       }
     } catch (err: any) {
       if (!/cancelled/i.test(String(err?.message))) {
