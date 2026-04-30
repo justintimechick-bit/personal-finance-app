@@ -6,6 +6,9 @@ dist
 .vite
 *.log
 tsconfig.tsbuildinfo
+.env
+.env.local
+.env.*.local
 # personal sync files — never commit your own finance data
 finance.json
 finance-*.json

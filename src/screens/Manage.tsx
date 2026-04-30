@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../db';
-import { Money, Section, CurrencyInput } from '../components/UI';
-import { scheduleAutoSave } from '../sync/fileSync';
+import { Cell, Tag, CurrencyInput } from '../components/UI';
+import { scheduleAutoSave } from '../sync/driveSync';
 import { useAppUI } from '../store/useAppStore';
 import type { Cadence, ExpenseCategory, PaymentMethod, IncomeType, CapType, ResetCadence } from '../types';
 
@@ -15,32 +15,50 @@ const INCOME_TYPES: IncomeType[] = ['paycheck', 'bonus', 'gift', 'reimbursement'
 const CAP_TYPES: CapType[] = ['fixed', 'dynamic', 'unlimited'];
 const RESET_CADENCES: ResetCadence[] = ['none', 'annual', 'monthly', 'per_statement'];
 
+// Category accent colors
+const CAT_COLOR: Record<ExpenseCategory, string> = {
+  housing:        '#a78bfa',
+  food:           '#fb923c',
+  transportation: '#60a5fa',
+  insurance:      '#f59e0b',
+  debt:           '#ef4444',
+  subscriptions:  '#ec4899',
+  entertainment:  '#4ade80',
+  health:         '#22d3ee',
+  misc:           '#71717a',
+};
+
 export default function Manage() {
   const [tab, setTab] = useState<Tab>('expenses');
 
   return (
-    <div>
-      <h1 className="text-2xl font-semibold mb-1">Manage</h1>
-      <div className="text-sm text-ink-300 mb-6">Configure your income, expenses, and the allocation waterfall.</div>
-
-      <div className="flex gap-2 mb-6 border-b border-ink-700">
-        {(['income', 'expenses', 'tiers'] as Tab[]).map(t => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            className={`px-4 py-2 text-sm font-medium capitalize transition-colors border-b-2 ${
-              tab === t ? 'border-accent text-ink-50' : 'border-transparent text-ink-300 hover:text-ink-50'
-            }`}
-          >
-            {t}
-          </button>
-        ))}
+    <>
+      <div className="screen-header">
+        <h1 className="screen-title">Manage</h1>
+        <div className="screen-meta">Configure income, expenses, and the allocation waterfall.</div>
       </div>
+
+      {/* Segmented tabs as bento cell */}
+      <Cell className="cell-pad-sm mb-2">
+        <div className="flex gap-1">
+          {(['income', 'expenses', 'tiers'] as Tab[]).map(t => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              className={`flex-1 px-3 py-1.5 text-[12px] font-bold capitalize rounded-lg transition-colors ${
+                tab === t ? 'bg-accent text-ink-900' : 'text-ink-200 hover:bg-ink-700'
+              }`}
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+      </Cell>
 
       {tab === 'income' && <IncomeTab />}
       {tab === 'expenses' && <ExpensesTab />}
       {tab === 'tiers' && <TiersTab />}
-    </div>
+    </>
   );
 }
 
@@ -48,72 +66,38 @@ function IncomeTab() {
   const items = useLiveQuery(() => db.incomeSources.toArray(), []);
   const accounts = useLiveQuery(() => db.accounts.toArray(), []);
   const { showToast } = useAppUI();
-
   if (!items || !accounts) return null;
 
-  async function update(id: number, field: string, value: any) {
-    await db.incomeSources.update(id, { [field]: value });
-    scheduleAutoSave(500);
-  }
-
-  async function add() {
-    await db.incomeSources.add({
-      name: 'New income source',
-      sourceType: 'other',
-      amount: 0,
-      cadence: 'monthly',
-      depositAccount: accounts?.[0]?.name ?? '',
-      isActive: true,
-    } as any);
-    scheduleAutoSave(500);
-  }
-
-  async function remove(id: number) {
-    if (!confirm('Delete this income source?')) return;
-    await db.incomeSources.delete(id);
-    scheduleAutoSave(500);
-    showToast('Deleted', 'success');
-  }
+  const update = async (id: number, field: string, value: any) => { await db.incomeSources.update(id, { [field]: value }); scheduleAutoSave(500); };
+  const add = async () => { await db.incomeSources.add({ name: 'New income source', sourceType: 'other', amount: 0, cadence: 'monthly', depositAccount: accounts?.[0]?.name ?? '', isActive: true } as any); scheduleAutoSave(500); };
+  const remove = async (id: number) => { if (!confirm('Delete this income source?')) return; await db.incomeSources.delete(id); scheduleAutoSave(500); showToast('Deleted', 'success'); };
 
   return (
-    <Section title="Income Sources" action={<button className="btn-ghost" onClick={add}>+ Add</button>}>
-      <div className="text-xs text-ink-300 mb-3">
-        Income sources feed the Payday screen. <strong>Cadence</strong> is especially important — it controls how monthly fixed expenses get prorated into a "checking reserve" on each paycheck (e.g., a $400/mo student loan reserves ~$184 out of a biweekly paycheck).
+    <Cell>
+      <div className="flex items-center justify-between mb-3">
+        <Tag>Income Sources — {items.length}</Tag>
+        <button className="btn-ghost" onClick={add}>+ Add</button>
       </div>
-      <div className="card divide-y divide-ink-700">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
         {items.map(i => (
-          <div key={i.id} className="p-4">
-            <div className="flex items-start gap-4 flex-wrap">
-              <div className="flex-1 min-w-0">
-                <input className="bg-transparent border-0 focus:outline-none font-medium text-ink-50 w-full" value={i.name} onChange={e => update(i.id, 'name', e.target.value)} />
-                <div className="flex flex-wrap gap-3 mt-2 text-xs text-ink-300">
-                  <label className="flex flex-col gap-0.5">
-                    <span className="text-[10px] uppercase tracking-wider text-ink-400">Type</span>
-                    <select className="bg-ink-700 border border-ink-600 rounded px-2 py-1" value={i.sourceType} onChange={e => update(i.id, 'sourceType', e.target.value)}>
-                      {INCOME_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-                    </select>
-                  </label>
-                  <label className="flex flex-col gap-0.5">
-                    <span className="text-[10px] uppercase tracking-wider text-ink-400">Cadence · drives per-paycheck reserve</span>
-                    <select className="bg-ink-700 border border-ink-600 rounded px-2 py-1" value={i.cadence} onChange={e => update(i.id, 'cadence', e.target.value)}>
-                      {CADENCES.map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
-                  </label>
-                  <label className="flex flex-col gap-0.5">
-                    <span className="text-[10px] uppercase tracking-wider text-ink-400">Deposit account · reference only</span>
-                    <select className="bg-ink-700 border border-ink-600 rounded px-2 py-1" value={i.depositAccount} onChange={e => update(i.id, 'depositAccount', e.target.value)}>
-                      {accounts.map(a => <option key={a.id} value={a.name}>{a.name}</option>)}
-                    </select>
-                  </label>
-                </div>
-              </div>
-              <div className="w-36">
-                <div className="text-[10px] uppercase tracking-wider text-ink-400 mb-0.5">Net per period</div>
-                <CurrencyInput value={i.amount} onChange={v => update(i.id, 'amount', v)} />
-              </div>
+          <div key={i.id} className="bg-ink-700 border border-ink-600 rounded-cell p-3">
+            <div className="flex items-start justify-between gap-2 mb-2">
+              <input className="bg-transparent border-0 focus:outline-none text-[13px] font-semibold text-ink-50 flex-1 min-w-0" value={i.name} onChange={e => update(i.id, 'name', e.target.value)} />
+              <CurrencyInput value={i.amount} onChange={v => update(i.id, 'amount', v)} className="w-28" />
             </div>
-            <div className="flex items-center justify-between mt-2 text-xs">
-              <label className="text-ink-300 flex items-center gap-2">
+            <div className="grid grid-cols-3 gap-1.5 text-[10px] text-ink-200">
+              <select className="bg-ink-600 border border-ink-500 rounded px-1.5 py-1 text-[10px]" value={i.sourceType} onChange={e => update(i.id, 'sourceType', e.target.value)}>
+                {INCOME_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+              <select className="bg-ink-600 border border-ink-500 rounded px-1.5 py-1 text-[10px]" value={i.cadence} onChange={e => update(i.id, 'cadence', e.target.value)}>
+                {CADENCES.map(c => <option key={c} value={c}>{c}</option>)}
+              </select>
+              <select className="bg-ink-600 border border-ink-500 rounded px-1.5 py-1 text-[10px]" value={i.depositAccount} onChange={e => update(i.id, 'depositAccount', e.target.value)}>
+                {accounts.map(a => <option key={a.id} value={a.name}>{a.name}</option>)}
+              </select>
+            </div>
+            <div className="flex items-center justify-between mt-2 text-[10px]">
+              <label className="text-ink-200 flex items-center gap-1.5">
                 <input type="checkbox" checked={i.isActive} onChange={e => update(i.id, 'isActive', e.target.checked)} />
                 Active
               </label>
@@ -122,39 +106,18 @@ function IncomeTab() {
           </div>
         ))}
       </div>
-    </Section>
+    </Cell>
   );
 }
 
 function ExpensesTab() {
   const items = useLiveQuery(() => db.fixedExpenses.toArray(), []);
   const { showToast } = useAppUI();
-
   if (!items) return null;
 
-  async function update(id: number, field: string, value: any) {
-    await db.fixedExpenses.update(id, { [field]: value });
-    scheduleAutoSave(500);
-  }
-
-  async function add() {
-    await db.fixedExpenses.add({
-      name: 'New expense',
-      category: 'misc',
-      amount: 0,
-      cadence: 'monthly',
-      paymentMethod: 'Credit Card',
-      isActive: true,
-    } as any);
-    scheduleAutoSave(500);
-  }
-
-  async function remove(id: number) {
-    if (!confirm('Delete this expense?')) return;
-    await db.fixedExpenses.delete(id);
-    scheduleAutoSave(500);
-    showToast('Deleted', 'success');
-  }
+  const update = async (id: number, field: string, value: any) => { await db.fixedExpenses.update(id, { [field]: value }); scheduleAutoSave(500); };
+  const add = async () => { await db.fixedExpenses.add({ name: 'New expense', category: 'misc', amount: 0, cadence: 'monthly', paymentMethod: 'Credit Card', isActive: true } as any); scheduleAutoSave(500); };
+  const remove = async (id: number) => { if (!confirm('Delete this expense?')) return; await db.fixedExpenses.delete(id); scheduleAutoSave(500); showToast('Deleted', 'success'); };
 
   const monthlyTotal = items.filter(e => e.isActive).reduce((s, e) => {
     const perYear = e.cadence === 'monthly' ? e.amount * 12 :
@@ -166,61 +129,73 @@ function ExpensesTab() {
     return s + perYear / 12;
   }, 0);
 
+  const bankTransferCount = items.filter(e => e.isActive && e.paymentMethod === 'Bank Transfer').length;
+
   return (
-    <Section title={`Fixed Expenses — ${Math.round(monthlyTotal).toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })} / mo`}
-             action={<button className="btn-ghost" onClick={add}>+ Add</button>}>
-      <div className="text-xs text-ink-300 mb-3 space-y-1">
-        <div>Recurring outflows. The <strong>Payment method</strong> field drives how each expense shows up on Payday:</div>
-        <ul className="list-disc ml-5 space-y-0.5 text-ink-400">
-          <li><strong className="text-ink-200">Bank Transfer</strong> — auto-debited from checking. These are summed per paycheck cadence and become the <em>Checking reserve</em> on Payday.</li>
-          <li><strong className="text-ink-200">Credit Card</strong> — spent on the card; increases CC balance, paid off separately. Does <em>not</em> reserve money in checking.</li>
-          <li><strong className="text-ink-200">Autopay / Cash / Other</strong> — informational only (counts toward monthly total but doesn't reserve cash).</li>
-        </ul>
+    <>
+      <div className="bento bento-4 mb-2">
+        <Cell
+          variant="green"
+          className="cell-flex cell-pad-sm"
+          helpTitle="Total Monthly"
+          help={<p>Every active fixed expense, normalized to a monthly amount (a $300/biweekly bill counts as ~$650/mo). Includes all payment methods. Same number you see as "Monthly Out" on the Dashboard.</p>}
+        >
+          <Tag onGreen>Total Monthly</Tag>
+          <div className="num-md text-black">${Math.round(monthlyTotal).toLocaleString()}</div>
+          <div className="text-[10px]" style={{color:'rgba(0,0,0,0.5)'}}>{items.filter(e => e.isActive).length} active</div>
+        </Cell>
+        <Cell
+          className="cell-flex cell-pad-sm"
+          helpTitle="Bank Transfer count"
+          help={<p>How many active expenses use the <strong>Bank Transfer</strong> payment method. Each one carves a slice out of every paycheck — they're the basis for the "Checking reserve" amount on Payday. Switch one to Credit Card or Autopay if you don't want it leaving checking that period.</p>}
+        >
+          <Tag>Bank Transfer</Tag>
+          <div className="num-md text-info">{bankTransferCount}</div>
+          <div className="text-[10px] text-ink-200">Auto-pays from checking</div>
+        </Cell>
+        <Cell className="cell-flex cell-pad-sm" style={{ gridColumn: '3/5' }}>
+          <Tag>Add Expense</Tag>
+          <button className="btn-primary mt-2" onClick={add}>+ Add new expense</button>
+        </Cell>
       </div>
-      <div className="card divide-y divide-ink-700">
-        {items.map(e => (
-          <div key={e.id} className="p-4">
-            <div className="flex items-start gap-4 flex-wrap">
-              <div className="flex-1 min-w-0">
-                <input className="bg-transparent border-0 focus:outline-none font-medium text-ink-50 w-full" value={e.name} onChange={ev => update(e.id, 'name', ev.target.value)} />
-                <div className="flex flex-wrap gap-3 mt-2 text-xs text-ink-300">
-                  <label className="flex flex-col gap-0.5">
-                    <span className="text-[10px] uppercase tracking-wider text-ink-400">Category</span>
-                    <select className="bg-ink-700 border border-ink-600 rounded px-2 py-1" value={e.category} onChange={ev => update(e.id, 'category', ev.target.value)}>
-                      {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
-                  </label>
-                  <label className="flex flex-col gap-0.5">
-                    <span className="text-[10px] uppercase tracking-wider text-ink-400">Cadence · prorated to paycheck</span>
-                    <select className="bg-ink-700 border border-ink-600 rounded px-2 py-1" value={e.cadence} onChange={ev => update(e.id, 'cadence', ev.target.value)}>
-                      {CADENCES.map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
-                  </label>
-                  <label className="flex flex-col gap-0.5">
-                    <span className="text-[10px] uppercase tracking-wider text-ink-400">Payment method · see legend above</span>
-                    <select className="bg-ink-700 border border-ink-600 rounded px-2 py-1" value={e.paymentMethod} onChange={ev => update(e.id, 'paymentMethod', ev.target.value)}>
-                      {PAYMENT_METHODS.map(m => <option key={m} value={m}>{m}</option>)}
-                    </select>
-                  </label>
+      <Cell>
+        <Tag>Fixed Expenses — {items.length}</Tag>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
+          {items.map(e => {
+            const accent = CAT_COLOR[e.category as ExpenseCategory] ?? '#71717a';
+            return (
+              <div key={e.id} className="bg-ink-700 border border-ink-600 rounded-cell p-3 relative" style={{borderLeft: `3px solid ${accent}`}}>
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <div className="flex-1 min-w-0">
+                    <input className="bg-transparent border-0 focus:outline-none text-[13px] font-semibold text-ink-50 w-full" value={e.name} onChange={ev => update(e.id, 'name', ev.target.value)} />
+                    <div className="text-[9px] uppercase tracking-wider mt-0.5 font-bold" style={{color: accent}}>{e.category}</div>
+                  </div>
+                  <CurrencyInput value={e.amount} onChange={v => update(e.id, 'amount', v)} className="w-24" />
                 </div>
-                {e.notes && <div className="text-xs text-ink-400 mt-1">{e.notes}</div>}
+                <div className="grid grid-cols-3 gap-1.5 text-[10px]">
+                  <select className="bg-ink-600 border border-ink-500 rounded px-1.5 py-1 text-[10px]" value={e.category} onChange={ev => update(e.id, 'category', ev.target.value)}>
+                    {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                  <select className="bg-ink-600 border border-ink-500 rounded px-1.5 py-1 text-[10px]" value={e.cadence} onChange={ev => update(e.id, 'cadence', ev.target.value)}>
+                    {CADENCES.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                  <select className="bg-ink-600 border border-ink-500 rounded px-1.5 py-1 text-[10px]" value={e.paymentMethod} onChange={ev => update(e.id, 'paymentMethod', ev.target.value)}>
+                    {PAYMENT_METHODS.map(m => <option key={m} value={m}>{m}</option>)}
+                  </select>
+                </div>
+                <div className="flex items-center justify-between mt-2 text-[10px]">
+                  <label className="text-ink-200 flex items-center gap-1.5">
+                    <input type="checkbox" checked={e.isActive} onChange={ev => update(e.id, 'isActive', ev.target.checked)} />
+                    Active
+                  </label>
+                  <button className="text-danger/80 hover:text-danger" onClick={() => remove(e.id)}>Delete</button>
+                </div>
               </div>
-              <div className="w-36">
-                <div className="text-[10px] uppercase tracking-wider text-ink-400 mb-0.5">Amount per period</div>
-                <CurrencyInput value={e.amount} onChange={v => update(e.id, 'amount', v)} />
-              </div>
-            </div>
-            <div className="flex items-center justify-between mt-2 text-xs">
-              <label className="text-ink-300 flex items-center gap-2">
-                <input type="checkbox" checked={e.isActive} onChange={ev => update(e.id, 'isActive', ev.target.checked)} />
-                Active
-              </label>
-              <button className="text-danger/80 hover:text-danger" onClick={() => remove(e.id)}>Delete</button>
-            </div>
-          </div>
-        ))}
-      </div>
-    </Section>
+            );
+          })}
+        </div>
+      </Cell>
+    </>
   );
 }
 
@@ -228,94 +203,58 @@ function TiersTab() {
   const items = useLiveQuery(() => db.tiers.orderBy('priority').toArray(), []);
   const accounts = useLiveQuery(() => db.accounts.toArray(), []);
   const { showToast } = useAppUI();
-
   if (!items || !accounts) return null;
 
-  async function update(id: number, field: string, value: any) {
-    await db.tiers.update(id, { [field]: value });
-    scheduleAutoSave(500);
-  }
-
-  async function add() {
+  const update = async (id: number, field: string, value: any) => { await db.tiers.update(id, { [field]: value }); scheduleAutoSave(500); };
+  const add = async () => {
     const maxPriority = items?.reduce((m, t) => Math.max(m, t.priority), -1) ?? -1;
-    await db.tiers.add({
-      priority: maxPriority + 1,
-      name: 'New tier',
-      cap: 1000,
-      capType: 'fixed',
-      targetAccount: accounts?.[0]?.name ?? '',
-      resetCadence: 'none',
-      isActive: true,
-    } as any);
+    await db.tiers.add({ priority: maxPriority + 1, name: 'New tier', cap: 1000, capType: 'fixed', targetAccount: accounts?.[0]?.name ?? '', resetCadence: 'none', isActive: true } as any);
     scheduleAutoSave(500);
-  }
-
-  async function remove(id: number) {
-    if (!confirm('Delete this tier?')) return;
-    await db.tiers.delete(id);
-    scheduleAutoSave(500);
-    showToast('Deleted', 'success');
-  }
+  };
+  const remove = async (id: number) => { if (!confirm('Delete this tier?')) return; await db.tiers.delete(id); scheduleAutoSave(500); showToast('Deleted', 'success'); };
 
   return (
-    <Section title="Allocation Waterfall" action={<button className="btn-ghost" onClick={add}>+ Add tier</button>}>
-      <div className="text-xs text-ink-300 mb-3 space-y-1">
-        <div><strong className="text-ink-200">Tiers are suggestion-only.</strong> Payday asks you to type each account split manually; these tiers power the "Suggested" hint next to each row and the Dashboard pacing widget. Editing a tier never moves money on its own.</div>
-        <div className="text-ink-400">
-          <strong>Priority</strong> is the waterfall order (0 fills first, then 1, etc.).
-          <strong className="ml-2">Cap type</strong>: <em>fixed</em> = stop at Cap; <em>dynamic</em> = cap is computed from live data (priority 0 = CC balance + buffer); <em>unlimited</em> = overflow catch-all.
-          <strong className="ml-2">Reset</strong>: <em>annual</em> zeroes the progress every Jan 1 (use for Roth IRA); <em>monthly</em> every 1st; <em>per_statement</em> resets after CC due date; <em>none</em> never resets.
-        </div>
+    <Cell>
+      <div className="flex items-center justify-between mb-2">
+        <Tag>Allocation Waterfall — Suggestion only</Tag>
+        <button className="btn-ghost" onClick={add}>+ Add tier</button>
       </div>
-      <div className="card divide-y divide-ink-700">
+      <div className="text-[10px] text-ink-200 mb-3">Lower priority fills first. Editing tiers never moves money — they only power the "Suggested" hint on Payday.</div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
         {items.map(t => (
-          <div key={t.id} className="p-4">
-            <div className="flex items-start gap-4 flex-wrap">
-              <div className="w-16">
-                <label className="text-xs text-ink-300">Priority</label>
-                <input type="number" className="input tabular" value={t.priority} onChange={e => update(t.id, 'priority', parseInt(e.target.value) || 0)} />
-              </div>
+          <div key={t.id} className="bg-ink-700 border border-ink-600 rounded-cell p-3">
+            <div className="flex items-start gap-2 mb-2">
+              <div className="w-8 h-8 rounded-lg bg-accent text-ink-900 grid place-items-center font-black text-[13px] shrink-0">{t.priority}</div>
               <div className="flex-1 min-w-0">
-                <input className="bg-transparent border-0 focus:outline-none font-medium text-ink-50 w-full" value={t.name} onChange={e => update(t.id, 'name', e.target.value)} />
-                <div className="flex flex-wrap gap-3 mt-2 text-xs text-ink-300">
-                  <label className="flex items-center gap-1">
-                    Cap type:
-                    <select className="bg-ink-700 border border-ink-600 rounded px-2 py-1" value={t.capType} onChange={e => update(t.id, 'capType', e.target.value)}>
-                      {CAP_TYPES.map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
-                  </label>
-                  <label className="flex items-center gap-1">
-                    Reset:
-                    <select className="bg-ink-700 border border-ink-600 rounded px-2 py-1" value={t.resetCadence} onChange={e => update(t.id, 'resetCadence', e.target.value)}>
-                      {RESET_CADENCES.map(r => <option key={r} value={r}>{r}</option>)}
-                    </select>
-                  </label>
-                  <label className="flex items-center gap-1">
-                    Target:
-                    <select className="bg-ink-700 border border-ink-600 rounded px-2 py-1" value={t.targetAccount} onChange={e => update(t.id, 'targetAccount', e.target.value)}>
-                      {accounts.map(a => <option key={a.id} value={a.name}>{a.name}</option>)}
-                    </select>
-                  </label>
-                </div>
-                {t.notes && <div className="text-xs text-ink-400 mt-1">{t.notes}</div>}
+                <input className="bg-transparent border-0 focus:outline-none text-[13px] font-semibold text-ink-50 w-full" value={t.name} onChange={e => update(t.id, 'name', e.target.value)} />
+                <div className="text-[10px] text-ink-200">→ {t.targetAccount}</div>
               </div>
-              <div className="w-36">
-                <label className="text-xs text-ink-300">Cap</label>
-                <CurrencyInput value={t.cap} onChange={v => update(t.id, 'cap', v)} />
-                {t.capType === 'dynamic' && <div className="text-xs text-ink-400 mt-1">(computed at runtime)</div>}
-                {t.capType === 'unlimited' && <div className="text-xs text-ink-400 mt-1">(no limit)</div>}
-              </div>
+              <CurrencyInput value={t.cap} onChange={v => update(t.id, 'cap', v)} className="w-24" />
             </div>
-            <div className="flex items-center justify-between mt-2 text-xs">
-              <label className="text-ink-300 flex items-center gap-2">
+            <div className="grid grid-cols-3 gap-1.5 text-[10px]">
+              <select className="bg-ink-600 border border-ink-500 rounded px-1.5 py-1 text-[10px]" value={t.capType} onChange={e => update(t.id, 'capType', e.target.value)}>
+                {CAP_TYPES.map(c => <option key={c} value={c}>cap: {c}</option>)}
+              </select>
+              <select className="bg-ink-600 border border-ink-500 rounded px-1.5 py-1 text-[10px]" value={t.resetCadence} onChange={e => update(t.id, 'resetCadence', e.target.value)}>
+                {RESET_CADENCES.map(r => <option key={r} value={r}>reset: {r}</option>)}
+              </select>
+              <select className="bg-ink-600 border border-ink-500 rounded px-1.5 py-1 text-[10px]" value={t.targetAccount} onChange={e => update(t.id, 'targetAccount', e.target.value)}>
+                {accounts.map(a => <option key={a.id} value={a.name}>{a.name}</option>)}
+              </select>
+            </div>
+            <div className="flex items-center gap-3 mt-2 text-[10px]">
+              <label className="text-ink-200 flex items-center gap-1">Pri
+                <input type="number" className="w-12 bg-ink-600 border border-ink-500 rounded px-1.5 py-0.5 tabular text-[10px]" value={t.priority} onChange={e => update(t.id, 'priority', parseInt(e.target.value) || 0)} />
+              </label>
+              <label className="text-ink-200 flex items-center gap-1.5">
                 <input type="checkbox" checked={t.isActive} onChange={e => update(t.id, 'isActive', e.target.checked)} />
                 Active
               </label>
-              <button className="text-danger/80 hover:text-danger" onClick={() => remove(t.id)}>Delete</button>
+              <button className="text-danger/80 hover:text-danger ml-auto" onClick={() => remove(t.id)}>Delete</button>
             </div>
           </div>
         ))}
       </div>
-    </Section>
+    </Cell>
   );
 }

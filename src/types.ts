@@ -107,7 +107,10 @@ export interface Settings {
   rothAnnualCap: number;
   targetSavingsRate: number;
   defaultCadence: Cadence;
-  fileHandleStored: boolean; // whether user has picked a file
+  /** @deprecated relic of the local-file-sync era; unused now. Kept optional so old JSON exports still parse. */
+  fileHandleStored?: boolean;
+  appName?: string;
+  appTagline?: string;
 }
 
 // Allocator output types

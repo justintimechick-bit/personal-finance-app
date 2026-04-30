@@ -85,10 +85,30 @@ interface SheetRows {
 }
 
 // Convert the raw [headers, ...rows] grid into a record-friendly structure.
-function shape(grid: any[][] | undefined): SheetRows | null {
+// Scans for the first row that contains AT LEAST TWO of the expected header
+// names — this skips the "KEY" legend block at the top of each sheet, where
+// each legend row only contains a single field name in column A (so it never
+// matches the multi-header threshold).
+//
+// Data rows missing the row's identifier column (`expectedHeaders[0]`) are
+// also dropped so trailing blank/legend rows below the table don't show up
+// as "row X is invalid" errors.
+function shape(grid: any[][] | undefined, expectedHeaders: string[]): SheetRows | null {
   if (!grid || grid.length === 0) return null;
-  const headers = (grid[0] ?? []).map(normHeader);
-  const data = grid.slice(1).filter(row => row.some(cell => !isBlank(cell)));
+  const targets = expectedHeaders.map(h => h.toLowerCase());
+  const idHeader = targets[0];
+  let headerIdx = -1;
+  for (let i = 0; i < grid.length; i++) {
+    const headers = (grid[i] ?? []).map(normHeader);
+    const matches = targets.filter(t => headers.includes(t)).length;
+    // Real header rows contain ALL expected headers; legend rows have at most one.
+    // Threshold of 2 is enough to disambiguate without being brittle.
+    if (matches >= 2) { headerIdx = i; break; }
+  }
+  if (headerIdx === -1) return null;
+  const headers = grid[headerIdx].map(normHeader);
+  const reqIdx = headers.indexOf(idHeader);
+  const data = grid.slice(headerIdx + 1).filter(row => !isBlank(row[reqIdx]));
   return { headers, data };
 }
 
@@ -136,7 +156,7 @@ export async function parseXlsx(file: File): Promise<ImportPreview> {
   };
 
   // --- Accounts ---
-  const accountsSheet = shape(grids.Accounts);
+  const accountsSheet = shape(grids.Accounts, ['name', 'type', 'balance']);
   if (!accountsSheet) {
     preview.hardErrors.push({ sheet: 'Accounts', row: 0, message: 'Required sheet "Accounts" is missing or empty.' });
   } else {
@@ -172,7 +192,7 @@ export async function parseXlsx(file: File): Promise<ImportPreview> {
   const accountNames = new Set(preview.accounts.valid.map(a => a.name));
 
   // --- Liabilities ---
-  const liabSheet = shape(grids.Liabilities);
+  const liabSheet = shape(grids.Liabilities, ['name', 'type', 'balance', 'apr']);
   if (liabSheet) {
     liabSheet.data.forEach((row, i) => {
       const rowNum = i + 2;
@@ -210,7 +230,7 @@ export async function parseXlsx(file: File): Promise<ImportPreview> {
   }
 
   // --- Income ---
-  const incomeSheet = shape(grids.Income);
+  const incomeSheet = shape(grids.Income, ['name', 'sourcetype', 'amount', 'cadence', 'depositaccount']);
   if (incomeSheet) {
     incomeSheet.data.forEach((row, i) => {
       const rowNum = i + 2;
@@ -245,7 +265,7 @@ export async function parseXlsx(file: File): Promise<ImportPreview> {
   }
 
   // --- Expenses ---
-  const expSheet = shape(grids.Expenses);
+  const expSheet = shape(grids.Expenses, ['name', 'category', 'amount', 'cadence', 'paymentmethod']);
   if (expSheet) {
     expSheet.data.forEach((row, i) => {
       const rowNum = i + 2;
@@ -279,7 +299,7 @@ export async function parseXlsx(file: File): Promise<ImportPreview> {
   }
 
   // --- Tiers (optional) ---
-  const tierSheet = shape(grids.Tiers);
+  const tierSheet = shape(grids.Tiers, ['name', 'priority', 'cap', 'captype', 'targetaccount']);
   if (tierSheet) {
     tierSheet.data.forEach((row, i) => {
       const rowNum = i + 2;
@@ -352,7 +372,6 @@ export async function commitImport(preview: ImportPreview): Promise<void> {
         rothAnnualCap: 7000,
         targetSavingsRate: 0.3,
         defaultCadence: 'biweekly',
-        fileHandleStored: false,
       });
       // Clear the wiped flag so subsequent reloads behave normally.
       await db.meta.delete('wiped');

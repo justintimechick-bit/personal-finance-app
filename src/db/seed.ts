@@ -64,7 +64,6 @@ const seedSettings: Settings = {
   rothAnnualCap: 7000,
   targetSavingsRate: 0.3,
   defaultCadence: 'biweekly',
-  fileHandleStored: false,
 };
 
 export async function isFirstLaunch(): Promise<boolean> {
@@ -93,7 +92,6 @@ export async function wipeDatabase(): Promise<void> {
         rothAnnualCap: 7000,
         targetSavingsRate: 0.2,
         defaultCadence: 'biweekly',
-        fileHandleStored: false,
       });
     },
   );

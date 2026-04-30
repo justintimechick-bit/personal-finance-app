@@ -4,14 +4,45 @@ import { db, seedDatabase } from '../db';
 import { useAppUI } from '../store/useAppStore';
 import { ImportPreview } from '../components/ImportPreview';
 import { parseXlsx, commitImport, type ImportPreview as ImportPreviewData } from '../sync/xlsxImport';
+import { isConfigured, signIn, loadFromDrive, saveToDrive } from '../sync/driveSync';
 
 export default function Onboarding() {
   const navigate = useNavigate();
-  const { showToast } = useAppUI();
+  const { showToast, setDriveStatus, markSynced } = useAppUI();
   const fileRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<ImportPreviewData | null>(null);
   const [parsing, setParsing] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [signingIn, setSigningIn] = useState(false);
+  const oauthConfigured = isConfigured();
+
+  async function handleGoogleSignIn() {
+    setSigningIn(true);
+    try {
+      const user = await signIn();
+      setDriveStatus('signed_in', user);
+      // If they already have data on Drive (from another browser/device), pull it.
+      const load = await loadFromDrive();
+      if (load.ok && !load.emptyRemote) {
+        markSynced();
+        showToast(`Welcome back, ${user.name}. Loaded data from Drive.`, 'success');
+        setTimeout(() => navigate('/'), 600);
+      } else {
+        // Brand-new account; clear the wiped flag (no data) and head to accounts to set up.
+        await db.meta.put({ key: 'wiped', value: true });
+        const save = await saveToDrive();
+        if (save.ok) markSynced();
+        showToast(`Signed in as ${user.email}. Add your accounts to get started.`, 'info');
+        setTimeout(() => navigate('/accounts'), 600);
+      }
+    } catch (err: any) {
+      if (!/cancelled/i.test(String(err?.message))) {
+        showToast(`Sign-in failed: ${err?.message ?? String(err)}`, 'error');
+      }
+    } finally {
+      setSigningIn(false);
+    }
+  }
 
   async function handleSeed() {
     await seedDatabase();
@@ -61,6 +92,26 @@ export default function Onboarding() {
       <div className="max-w-4xl mx-auto p-6 md:p-10">
         <h1 className="text-3xl font-semibold mb-1">Welcome to Finance</h1>
         <div className="text-sm text-ink-300 mb-8">Pick how you'd like to set up your data. You can change anything later.</div>
+
+        {!preview && oauthConfigured && (
+          <div className="card p-6 mb-4 border-accent/30 bg-accent/5">
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <div className="flex-1 min-w-[260px]">
+                <div className="text-lg font-semibold mb-1">Sign in with Google</div>
+                <div className="text-xs text-ink-300 leading-relaxed">
+                  Recommended. Your data syncs automatically to a single JSON file in your Google Drive (<code>finance-app-data.json</code>) — open the app on any browser, sign in with the same Google account, and your numbers follow.
+                </div>
+              </div>
+              <button
+                className="btn-primary"
+                disabled={signingIn}
+                onClick={handleGoogleSignIn}
+              >
+                {signingIn ? 'Signing in…' : 'Continue with Google'}
+              </button>
+            </div>
+          </div>
+        )}
 
         {!preview ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
