@@ -8,32 +8,43 @@ import { isConfigured, signIn, loadFromDrive, saveToDrive } from '../sync/driveS
 
 export default function Onboarding() {
   const navigate = useNavigate();
-  const { showToast, setDriveStatus, markSynced } = useAppUI();
+  const { showToast, driveStatus, driveUser, setDriveStatus, markSynced, setNeedsOnboarding } = useAppUI();
   const fileRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<ImportPreviewData | null>(null);
   const [parsing, setParsing] = useState(false);
   const [importing, setImporting] = useState(false);
   const [signingIn, setSigningIn] = useState(false);
   const oauthConfigured = isConfigured();
+  const isSignedIn = driveStatus === 'signed_in';
+
+  // After any local DB change, push to Drive if signed in. Centralizes the
+  // post-write logic so we never accidentally lose a write to the auto-save
+  // debounce or a page reload.
+  async function pushToDrive(): Promise<{ ok: boolean; reason?: string }> {
+    if (!isSignedIn) return { ok: true };
+    const r = await saveToDrive();
+    if (r.ok) markSynced();
+    return r;
+  }
 
   async function handleGoogleSignIn() {
     setSigningIn(true);
     try {
       const user = await signIn();
       setDriveStatus('signed_in', user);
-      // If they already have data on Drive (from another browser/device), pull it.
+      // Pull any existing remote data first.
       const load = await loadFromDrive();
       if (load.ok && !load.emptyRemote) {
         markSynced();
+        setNeedsOnboarding(false);
         showToast(`Welcome back, ${user.name}. Loaded data from Drive.`, 'success');
         setTimeout(() => navigate('/'), 600);
       } else {
-        // Brand-new account; clear the wiped flag (no data) and head to accounts to set up.
+        // Brand-new account on Drive — stay on Onboarding so the user can pick
+        // a setup option. The signed-in banner replaces the sign-in callout
+        // above the cards.
         await db.meta.put({ key: 'wiped', value: true });
-        const save = await saveToDrive();
-        if (save.ok) markSynced();
-        showToast(`Signed in as ${user.email}. Add your accounts to get started.`, 'info');
-        setTimeout(() => navigate('/accounts'), 600);
+        showToast(`Signed in as ${user.email}. Now choose how to set up your data.`, 'info');
       }
     } catch (err: any) {
       if (!/cancelled/i.test(String(err?.message))) {
@@ -46,13 +57,25 @@ export default function Onboarding() {
 
   async function handleSeed() {
     await seedDatabase();
-    showToast('Sample data loaded.', 'success');
+    const sync = await pushToDrive();
+    if (!sync.ok) {
+      showToast(`Sample loaded, but Drive sync failed: ${sync.reason}`, 'error');
+      return;
+    }
+    setNeedsOnboarding(false);
+    showToast(isSignedIn ? 'Sample data loaded. Synced to Drive.' : 'Sample data loaded.', 'success');
     setTimeout(() => navigate('/'), 400);
   }
 
   async function handleFromScratch() {
     // Mark wiped so the next bootstrap doesn't re-seed.
     await db.meta.put({ key: 'wiped', value: true });
+    const sync = await pushToDrive();
+    if (!sync.ok) {
+      showToast(`Started fresh, but Drive sync failed: ${sync.reason}`, 'error');
+      return;
+    }
+    setNeedsOnboarding(false);
     showToast('Starting fresh — add your accounts and expenses to get going.', 'info');
     setTimeout(() => navigate('/accounts'), 400);
   }
@@ -78,8 +101,15 @@ export default function Onboarding() {
     setImporting(true);
     try {
       await commitImport(preview);
-      showToast('Import complete. Loading…', 'success');
-      setTimeout(() => window.location.assign('/'), 600);
+      const sync = await pushToDrive();
+      if (!sync.ok) {
+        showToast(`Imported, but Drive sync failed: ${sync.reason}`, 'error');
+        setImporting(false);
+        return;
+      }
+      setNeedsOnboarding(false);
+      showToast(isSignedIn ? 'Import complete. Synced to Drive.' : 'Import complete.', 'success');
+      setTimeout(() => navigate('/'), 400);
     } catch (err) {
       console.error('Import failed', err);
       showToast(`Import failed: ${err instanceof Error ? err.message : String(err)}`, 'error');
@@ -93,13 +123,14 @@ export default function Onboarding() {
         <h1 className="text-3xl font-semibold mb-1">Welcome to Finance</h1>
         <div className="text-sm text-ink-300 mb-8">Pick how you'd like to set up your data. You can change anything later.</div>
 
-        {!preview && oauthConfigured && (
+        {/* Sign-in CTA (signed out) — recommended path */}
+        {!preview && oauthConfigured && !isSignedIn && (
           <div className="card p-6 mb-4 border-accent/30 bg-accent/5">
             <div className="flex items-center justify-between gap-4 flex-wrap">
               <div className="flex-1 min-w-[260px]">
-                <div className="text-lg font-semibold mb-1">Sign in with Google</div>
+                <div className="text-lg font-semibold mb-1">Sign in with Google <span className="text-[10px] uppercase tracking-wider text-accent ml-1">recommended</span></div>
                 <div className="text-xs text-ink-300 leading-relaxed">
-                  Recommended. Your data syncs automatically to a single JSON file in your Google Drive (<code>finance-app-data.json</code>) — open the app on any browser, sign in with the same Google account, and your numbers follow.
+                  Your data syncs automatically to a single JSON file in your Google Drive (<code>finance-app-data.json</code>). Open the app on any browser, sign in with the same Google account, and your numbers follow.
                 </div>
               </div>
               <button
@@ -109,6 +140,21 @@ export default function Onboarding() {
               >
                 {signingIn ? 'Signing in…' : 'Continue with Google'}
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* Signed-in confirmation (signed in, fresh Drive) — pick a setup path next */}
+        {!preview && isSignedIn && driveUser && (
+          <div className="card p-6 mb-4 border-accent/40 bg-accent/10">
+            <div className="flex items-center gap-3 flex-wrap">
+              {driveUser.pictureUrl && (
+                <img src={driveUser.pictureUrl} alt="" referrerPolicy="no-referrer" className="w-8 h-8 rounded-full" />
+              )}
+              <div className="flex-1 min-w-[200px]">
+                <div className="text-sm font-semibold">Signed in as {driveUser.email}</div>
+                <div className="text-xs text-ink-300 mt-0.5">Now pick how to set up your data — your choice will sync to Drive immediately.</div>
+              </div>
             </div>
           </div>
         )}

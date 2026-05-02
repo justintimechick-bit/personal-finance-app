@@ -62,9 +62,9 @@ export default function Settings() {
     if (!confirm('Importing will REPLACE all current data. Continue?')) { e.target.value = ''; return; }
     const res = await uploadBackup(file);
     if (res.ok) {
+      // uploadBackup already pushes to Drive when signed in; just refresh state.
       if (signedIn) markSynced();
-      showToast('Import complete. Reloading…', 'success');
-      setTimeout(() => window.location.reload(), 1000);
+      showToast('Import complete.', 'success');
     }
     else showToast(`Import failed: ${res.reason}`, 'error');
     e.target.value = '';
@@ -72,8 +72,12 @@ export default function Settings() {
   async function handleReset() {
     if (!confirm('Reset to initial seed data? This wipes all paycheck history and balance changes.')) return;
     if (!confirm('Really? This cannot be undone.')) return;
-    await resetDatabase(); showToast('Reset complete. Reloading…', 'info');
-    setTimeout(() => window.location.reload(), 800);
+    await resetDatabase();
+    if (signedIn) {
+      const save = await saveToDrive();
+      if (save.ok) markSynced();
+    }
+    showToast('Reset complete.', 'success');
   }
   async function handleXlsxFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]; e.target.value = '';
@@ -87,14 +91,40 @@ export default function Settings() {
     if (!xlsxPreview) return;
     if (!confirm('Replace ALL current data with the contents of this file?')) return;
     setXlsxImporting(true);
-    try { await commitImport(xlsxPreview); showToast('Import complete. Reloading…', 'success'); setTimeout(() => window.location.reload(), 800); }
-    catch (err) { console.error('Import failed', err); showToast(`Import failed: ${err instanceof Error ? err.message : String(err)}`, 'error'); setXlsxImporting(false); }
+    try {
+      await commitImport(xlsxPreview);
+      // Push the freshly-imported data to Drive immediately so the auto-save
+      // debounce (1.5s) can't lose it. Also avoids the previous reload-then-
+      // load-from-Drive race that overwrote the import.
+      if (signedIn) {
+        const save = await saveToDrive();
+        if (save.ok) markSynced();
+        else {
+          showToast(`Imported, but Drive sync failed: ${save.reason}`, 'error');
+          setXlsxImporting(false);
+          return;
+        }
+      }
+      setXlsxPreview(null);
+      setXlsxImporting(false);
+      showToast(signedIn ? 'Import complete. Synced to Drive.' : 'Import complete.', 'success');
+    }
+    catch (err) {
+      console.error('Import failed', err);
+      showToast(`Import failed: ${err instanceof Error ? err.message : String(err)}`, 'error');
+      setXlsxImporting(false);
+    }
   }
   async function handleWipe() {
     if (!confirm('Wipe ALL data to a completely empty workspace?')) return;
     if (!confirm('Really? This cannot be undone.')) return;
-    await wipeDatabase(); showToast('Wiped. Reloading…', 'info');
-    setTimeout(() => window.location.reload(), 800);
+    await wipeDatabase();
+    if (signedIn) {
+      const save = await saveToDrive();
+      if (save.ok) markSynced();
+    }
+    showToast('Wiped.', 'success');
+    setTimeout(() => window.location.assign('/onboarding'), 600);
   }
   const updateSetting = async (field: string, value: any) => { await db.settings.update(1, { [field]: value }); };
 

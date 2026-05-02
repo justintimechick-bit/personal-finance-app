@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import Layout from './components/Layout';
 import Dashboard from './screens/Dashboard';
@@ -17,8 +17,8 @@ import { db } from './db';
 // ensures bootstrap + hook registration only happens once per page load.
 let bootstrapStarted = false;
 
-function useBootstrap(setNeedsOnboarding: (v: boolean) => void) {
-  const { setBootstrapping, setDriveStatus, markSynced } = useAppUI();
+function useBootstrap() {
+  const { setBootstrapping, setDriveStatus, markSynced, setNeedsOnboarding } = useAppUI();
 
   useEffect(() => {
     if (bootstrapStarted) return;
@@ -45,6 +45,8 @@ function useBootstrap(setNeedsOnboarding: (v: boolean) => void) {
         const first = await isFirstLaunch();
         if (first) {
           setNeedsOnboarding(true);
+        } else {
+          setNeedsOnboarding(false);
         }
 
         // Step 3: Set up auto-save hook — any DB write triggers a debounced
@@ -73,7 +75,8 @@ function useBootstrap(setNeedsOnboarding: (v: boolean) => void) {
   }, [setBootstrapping, setDriveStatus, markSynced, setNeedsOnboarding]);
 }
 
-function OnboardingGate({ needsOnboarding }: { needsOnboarding: boolean }) {
+function OnboardingGate() {
+  const needsOnboarding = useAppUI(s => s.needsOnboarding);
   const location = useLocation();
   if (needsOnboarding && location.pathname !== '/onboarding') {
     return <Navigate to="/onboarding" replace />;
@@ -82,8 +85,7 @@ function OnboardingGate({ needsOnboarding }: { needsOnboarding: boolean }) {
 }
 
 export default function App() {
-  const [needsOnboarding, setNeedsOnboarding] = useState(false);
-  useBootstrap(setNeedsOnboarding);
+  useBootstrap();
   const isBootstrapping = useAppUI(s => s.isBootstrapping);
 
   if (isBootstrapping) {
@@ -99,7 +101,7 @@ export default function App() {
 
   return (
     <>
-      <OnboardingGate needsOnboarding={needsOnboarding} />
+      <OnboardingGate />
       <Routes>
         <Route path="/onboarding" element={<Onboarding />} />
         <Route element={<Layout />}>
