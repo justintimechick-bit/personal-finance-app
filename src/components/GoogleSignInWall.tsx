@@ -16,7 +16,13 @@ export function GoogleSignInWall({ onSuccess }: GoogleSignInWallProps) {
     setSigningIn(true);
     setError(null);
     try {
-      const user = await signIn();
+      const timeout = new Promise<never>((_, reject) =>
+        setTimeout(
+          () => reject(new Error('Sign-in timed out. The popup may have been blocked — check your browser extensions and popup settings, then try again.')),
+          15_000,
+        ),
+      );
+      const user = await Promise.race([signIn(), timeout]);
       setDriveStatus('signed_in', user);
       onSuccess(user);
     } catch (err: any) {
