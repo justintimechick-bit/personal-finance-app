@@ -6,6 +6,7 @@ export type DriveStatus = 'signed_out' | 'signed_in' | 'token_expired' | 'error'
 interface AppUIState {
   isBootstrapping: boolean;
   needsOnboarding: boolean;
+  authRequired: boolean;
   driveStatus: DriveStatus;
   driveUser: DriveUser | null;
   lastSyncedAt: number | null;
@@ -13,6 +14,7 @@ interface AppUIState {
   toast: { message: string; kind: 'info' | 'success' | 'error' } | null;
   setBootstrapping: (v: boolean) => void;
   setNeedsOnboarding: (v: boolean) => void;
+  setAuthRequired: (v: boolean) => void;
   setDriveStatus: (s: DriveStatus, user?: DriveUser | null) => void;
   markSynced: () => void;
   markEdited: () => void;
@@ -23,6 +25,7 @@ interface AppUIState {
 export const useAppUI = create<AppUIState>((set) => ({
   isBootstrapping: true,
   needsOnboarding: false,
+  authRequired: false,
   driveStatus: 'signed_out',
   driveUser: null,
   lastSyncedAt: null,
@@ -30,6 +33,7 @@ export const useAppUI = create<AppUIState>((set) => ({
   toast: null,
   setBootstrapping: (v) => set({ isBootstrapping: v }),
   setNeedsOnboarding: (v) => set({ needsOnboarding: v }),
+  setAuthRequired: (v) => set({ authRequired: v }),
   setDriveStatus: (s, user) => set({ driveStatus: s, driveUser: user ?? null }),
   markSynced: () => set({ lastSyncedAt: Date.now() }),
   markEdited: () => set({ lastEditedAt: Date.now() }),
