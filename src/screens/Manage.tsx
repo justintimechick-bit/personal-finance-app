@@ -133,33 +133,35 @@ function ExpensesTab() {
 
   return (
     <>
-      <div className="bento bento-4 mb-2">
+      <div className="grid grid-cols-2 gap-2 mb-2">
         <Cell
-          variant="green"
-          className="cell-flex cell-pad-sm"
+          className="cell-pad-sm"
           helpTitle="Total Monthly"
           help={<p>Every active fixed expense, normalized to a monthly amount (a $300/biweekly bill counts as ~$650/mo). Includes all payment methods. Same number you see as "Monthly Out" on the Dashboard.</p>}
         >
-          <Tag onGreen>Total Monthly</Tag>
-          <div className="num-md text-black">${Math.round(monthlyTotal).toLocaleString()}</div>
-          <div className="text-[10px]" style={{color:'rgba(0,0,0,0.5)'}}>{items.filter(e => e.isActive).length} active</div>
+          <div className="flex items-baseline gap-2">
+            <Tag>Total Monthly</Tag>
+            <div className="text-[18px] font-extrabold tabular text-accent-dim">${Math.round(monthlyTotal).toLocaleString()}</div>
+            <div className="text-[10px] text-ink-500">· {items.filter(e => e.isActive).length} active</div>
+          </div>
         </Cell>
         <Cell
-          className="cell-flex cell-pad-sm"
+          className="cell-pad-sm"
           helpTitle="Bank Transfer count"
           help={<p>How many active expenses use the <strong>Bank Transfer</strong> payment method. Each one carves a slice out of every paycheck — they're the basis for the "Checking reserve" amount on Payday. Switch one to Credit Card or Autopay if you don't want it leaving checking that period.</p>}
         >
-          <Tag>Bank Transfer</Tag>
-          <div className="num-md text-info">{bankTransferCount}</div>
-          <div className="text-[10px] text-ink-500">Auto-pays from checking</div>
-        </Cell>
-        <Cell className="cell-flex cell-pad-sm" style={{ gridColumn: '3/5' }}>
-          <Tag>Add Expense</Tag>
-          <button className="btn-primary mt-2" onClick={add}>+ Add new expense</button>
+          <div className="flex items-baseline gap-2">
+            <Tag>Bank Transfer</Tag>
+            <div className="text-[18px] font-extrabold tabular text-info">{bankTransferCount}</div>
+            <div className="text-[10px] text-ink-500">· auto-pays from checking</div>
+          </div>
         </Cell>
       </div>
       <Cell>
-        <Tag>Fixed Expenses — {items.length}</Tag>
+        <div className="flex items-center justify-between mb-2">
+          <Tag>Fixed Expenses — {items.length}</Tag>
+          <button className="btn-ghost" onClick={add}>+ Add expense</button>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
           {items.map(e => {
             const accent = CAT_COLOR[e.category as ExpenseCategory] ?? '#71717a';

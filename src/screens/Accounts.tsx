@@ -89,50 +89,50 @@ export default function Accounts() {
       </div>
 
       {/* Top summary row */}
-      <div className="bento bento-4 mb-2">
+      <div className="grid grid-cols-3 gap-2 mb-2">
         <Cell
-          variant="green"
-          className="cell-flex cell-pad-sm"
+          className="cell-pad-sm"
           helpTitle="Total Assets"
           help={<p>Sum of <strong>every account balance</strong>, regardless of type. Includes checking, HYSA, Roth, brokerage, cash, and "other".</p>}
         >
-          <Tag onGreen>Total Assets</Tag>
-          <div className="num-md text-black"><Money amount={totalAssets} showCents={false} /></div>
-          <div className="text-[10px]" style={{color:'rgba(0,0,0,0.5)'}}>{accounts.length} accounts</div>
+          <div className="flex items-baseline gap-2">
+            <Tag>Total Assets</Tag>
+            <div className="text-[18px] font-extrabold tabular text-accent-dim"><Money amount={totalAssets} showCents={false} /></div>
+            <div className="text-[10px] text-ink-500">· {accounts.length} accounts</div>
+          </div>
         </Cell>
         <Cell
-          variant={totalLiab > 0 ? 'warn' : 'default'}
-          className="cell-flex cell-pad-sm"
+          className="cell-pad-sm"
           helpTitle="Total Debt"
           help={<p>Sum of every <strong>active</strong> liability. Inactive ones (toggled off after payoff) are excluded. Pay down a debt by allocating to it on the Payday screen.</p>}
         >
-          <Tag>Total Debt</Tag>
-          <div className={`num-md ${totalLiab > 0 ? 'text-warn' : 'text-ink-900'}`}><Money amount={totalLiab} showCents={false} /></div>
-          <div className="text-[10px] text-ink-500">{liabilities.filter(l => l.isActive).length} active</div>
+          <div className="flex items-baseline gap-2">
+            <Tag>Total Debt</Tag>
+            <div className={`text-[18px] font-extrabold tabular ${totalLiab > 0 ? 'text-warn' : 'text-ink-900'}`}><Money amount={totalLiab} showCents={false} /></div>
+            <div className="text-[10px] text-ink-500">· {liabilities.filter(l => l.isActive).length} active</div>
+          </div>
         </Cell>
         <Cell
-          className="cell-flex cell-pad-sm"
+          className="cell-pad-sm"
           helpTitle="Net Worth"
           help={<p>Total Assets minus Total Debt. Identical to the value shown on the Dashboard hero card.</p>}
         >
-          <Tag>Net Worth</Tag>
-          <div className={`num-md ${totalAssets - totalLiab >= 0 ? 'text-ink-900' : 'text-danger'}`}>
-            <Money amount={totalAssets - totalLiab} showCents={false} />
-          </div>
-          <div className="text-[10px] text-ink-500">Assets − Debt</div>
-        </Cell>
-        <Cell className="cell-flex cell-pad-sm">
-          <Tag>Quick Actions</Tag>
-          <div className="flex gap-2 flex-wrap mt-1">
-            <button className="btn-ghost" onClick={addAccount}>+ Account</button>
-            <button className="btn-ghost" onClick={addLiability}>+ Liability</button>
+          <div className="flex items-baseline gap-2">
+            <Tag>Net Worth</Tag>
+            <div className={`text-[18px] font-extrabold tabular ${totalAssets - totalLiab >= 0 ? 'text-ink-900' : 'text-danger'}`}>
+              <Money amount={totalAssets - totalLiab} showCents={false} />
+            </div>
+            <div className="text-[10px] text-ink-500">· assets − debt</div>
           </div>
         </Cell>
       </div>
 
       {/* Accounts grid */}
       <Cell className="mb-2">
-        <Tag>Accounts</Tag>
+        <div className="flex items-center justify-between mb-2">
+          <Tag>Accounts</Tag>
+          <button className="btn-ghost" onClick={addAccount}>+ Account</button>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
           {accounts.map((a, i) => (
             <div key={a.id} className="bg-paper-100 border border-paper-300 rounded-cell p-3">
@@ -179,7 +179,10 @@ export default function Accounts() {
 
       {/* Liabilities grid */}
       <Cell>
-        <Tag>Liabilities</Tag>
+        <div className="flex items-center justify-between mb-2">
+          <Tag>Liabilities</Tag>
+          <button className="btn-ghost" onClick={addLiability}>+ Liability</button>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
           {liabilities.map(l => (
             <div key={l.id} className="bg-paper-100 border border-paper-300 rounded-cell p-3">

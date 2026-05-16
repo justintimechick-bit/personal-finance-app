@@ -177,9 +177,9 @@ export default function Payday() {
       </div>
 
       {/* Header row: 4-up summary */}
-      <div className="bento bento-4 mb-2">
+      <div className="grid grid-cols-4 gap-2 mb-2">
         <Cell
-          className="cell-flex cell-pad-sm"
+          className="cell-pad-sm"
           helpTitle="Source"
           help={<p>Which income source this paycheck is coming from. The dropdown lists every <strong>active</strong> income from Manage → Income. The selected source's <em>cadence</em> (weekly / biweekly / monthly / etc.) drives how monthly fixed expenses get prorated into the per-paycheck checking reserve.</p>}
         >
@@ -190,7 +190,7 @@ export default function Payday() {
           <input type="date" className="input mt-2" value={date} onChange={e => setDate(e.target.value)} />
         </Cell>
         <Cell
-          className="cell-flex cell-pad-sm"
+          className="cell-pad-sm"
           helpTitle="Net Pay"
           help={<>
             <p>The dollar amount you're allocating from this paycheck. Defaults to the source's stored amount; type a different number to override (clearing the field reverts to the default).</p>
@@ -198,11 +198,11 @@ export default function Payday() {
           </>}
         >
           <Tag>Net Pay</Tag>
-          <div className="num-md text-ink-900"><Money amount={effectiveAmount} showCents={false} /></div>
-          <CurrencyInput value={amount} onChange={setAmount} />
+          <div className="num-sm text-ink-900 mt-1"><Money amount={effectiveAmount} showCents={false} /></div>
+          <CurrencyInput value={amount} onChange={setAmount} className="mt-2" />
         </Cell>
         <Cell
-          className="cell-flex cell-pad-sm"
+          className="cell-pad-sm"
           helpTitle="Allocated"
           help={<>
             <p>Running sum of everything you've typed into the per-account split rows + the per-liability paydown rows below.</p>
@@ -210,12 +210,12 @@ export default function Payday() {
           </>}
         >
           <Tag>Allocated</Tag>
-          <div className="num-md text-accent"><Money amount={allocated} showCents={false} /></div>
-          <div className="text-[10px] text-ink-500">Reserve: <Money amount={checkingReserve} showCents={false} /></div>
+          <div className="num-sm text-accent-dim mt-1"><Money amount={allocated} showCents={false} /></div>
+          <div className="text-[10px] text-ink-500 mt-1">Reserve: <Money amount={checkingReserve} showCents={false} /></div>
         </Cell>
         <Cell
           variant={remainingVariant}
-          className="cell-flex cell-pad-sm"
+          className="cell-pad-sm"
           helpTitle="Remaining"
           help={<>
             <p><strong>Net pay − Allocated.</strong> When this hits exactly $0, the Apply paycheck button unlocks (turns green).</p>
@@ -223,10 +223,10 @@ export default function Payday() {
           </>}
         >
           <Tag onGreen={remainingVariant === 'green'}>Remaining</Tag>
-          <div className={`num-md ${remainingVariant === 'green' ? 'text-black' : remainingTone}`}>
+          <div className={`num-sm mt-1 ${remainingVariant === 'green' ? 'text-black' : remainingTone}`}>
             <Money amount={remaining} showSign showCents={false} />
           </div>
-          <div className={`text-[10px] ${remainingVariant === 'green' ? '' : 'text-ink-500'}`} style={remainingVariant === 'green' ? {color:'rgba(0,0,0,0.5)'} : {}}>
+          <div className={`text-[10px] mt-1 ${remainingVariant === 'green' ? '' : 'text-ink-500'}`} style={remainingVariant === 'green' ? {color:'rgba(0,0,0,0.5)'} : {}}>
             {Math.abs(remaining) < 0.01 ? 'Ready to apply' : 'Allocate every dollar'}
           </div>
         </Cell>
