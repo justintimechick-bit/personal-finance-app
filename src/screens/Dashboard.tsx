@@ -2,10 +2,10 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { Link } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 import { db } from '../db';
-import { Cell, Tag, Money, Bar, Spark } from '../components/UI';
+import { Cell, Tag, Money, Bar, Spark, useMaskedFmt } from '../components/UI';
 import { netWorth, totalLiquid, totalInvested, totalOther, totalDebt, monthlyExpenseTotal, savingsRateYTD, ccRunway, ytdSavings } from '../core/calc';
 import { allocate } from '../core/allocator';
-import { fmt, fmtDate, convertCadence } from '../core/dates';
+import { fmtDate, convertCadence } from '../core/dates';
 
 export default function Dashboard() {
   const accounts = useLiveQuery(() => db.accounts.toArray(), []);
@@ -17,8 +17,10 @@ export default function Dashboard() {
   const snapshots = useLiveQuery(() => db.netWorthSnapshots.orderBy('date').toArray(), []);
   const settings = useLiveQuery(() => db.settings.get(1), []);
 
+  const maskedFmt = useMaskedFmt();
+
   if (!accounts || !liabilities || !incomeSources || !expenses || !tiers || !history || !snapshots || !settings) {
-    return <div className="text-ink-200 p-8">Loading…</div>;
+    return <div className="text-ink-500 p-8">Loading…</div>;
   }
 
   const liquid = totalLiquid(accounts);
@@ -73,15 +75,15 @@ export default function Dashboard() {
           <div style={{ position:'absolute', right:-24, top:-24, width:160, height:160, borderRadius:'50%', background:'rgba(74,222,128,0.06)', pointerEvents:'none' }} />
           <div>
             <Tag>Net Worth</Tag>
-            <div className={`num-hero mt-2 ${nw >= 0 ? 'text-ink-50' : 'text-danger'}`}><Money amount={nw} showCents={false} /></div>
-            <div className="text-[11px] text-ink-200 mt-2">All accounts − active debt</div>
+            <div className={`num-hero mt-2 ${nw >= 0 ? 'text-ink-900' : 'text-danger'}`}><Money amount={nw} showCents={false} /></div>
+            <div className="text-[11px] text-ink-500 mt-2">All accounts − active debt</div>
           </div>
           <div className="flex justify-between items-end">
             <div>
               <div className={`text-[11px] font-semibold ${savingsRate >= settings.targetSavingsRate ? 'text-accent' : 'text-warn'}`}>
                 {savingsRate >= settings.targetSavingsRate ? '↑ On track' : '· Below target'}
               </div>
-              <div className="text-[10px] text-ink-200">Savings rate {(savingsRate * 100).toFixed(1)}% YTD</div>
+              <div className="text-[10px] text-ink-500">Savings rate {(savingsRate * 100).toFixed(1)}% YTD</div>
             </div>
             <Spark data={sparkData} color="#4ade80" width={100} height={36} />
           </div>
@@ -93,8 +95,8 @@ export default function Dashboard() {
           help={<p>Sum of every account typed <strong>checking</strong>, <strong>HYSA</strong>, or <strong>cash</strong>. Money you can spend without penalties or selling investments.</p>}
         >
           <Tag>Liquid</Tag>
-          <div className="num-lg text-ink-50"><Money amount={liquid} showCents={false} /></div>
-          <div className="text-[10px] text-ink-200">Checking + HYSA + cash</div>
+          <div className="num-lg text-ink-900"><Money amount={liquid} showCents={false} /></div>
+          <div className="text-[10px] text-ink-500">Checking + HYSA + cash</div>
         </Cell>
 
         <Cell
@@ -103,8 +105,8 @@ export default function Dashboard() {
           help={<p>Sum of accounts typed <strong>roth_ira</strong> and <strong>brokerage</strong>. Doesn't include HYSA (counted as Liquid) or accounts typed "other" (those show in their own card if you have any).</p>}
         >
           <Tag>Invested</Tag>
-          <div className="num-lg text-ink-50"><Money amount={invested} showCents={false} /></div>
-          <div className="text-[10px] text-ink-200">Roth + brokerage</div>
+          <div className="num-lg text-ink-900"><Money amount={invested} showCents={false} /></div>
+          <div className="text-[10px] text-ink-500">Roth + brokerage</div>
         </Cell>
 
         {/* Savings rate — GREEN accent */}
@@ -132,8 +134,8 @@ export default function Dashboard() {
           help={<p>Sum of every <strong>active</strong> liability's balance. Inactive liabilities (e.g. paid-off student loans you toggled off) don't count. To pay one down: log a paycheck and add an amount in the Liability Paydown row.</p>}
         >
           <Tag>Debt</Tag>
-          <div className={`num-lg ${debt > 0 ? 'text-warn' : 'text-ink-50'}`}><Money amount={debt} showCents={false} /></div>
-          <div className="text-[10px] text-ink-200">{liabilities.filter(l => l.isActive).length} active liabilit{liabilities.filter(l => l.isActive).length === 1 ? 'y' : 'ies'}</div>
+          <div className={`num-lg ${debt > 0 ? 'text-warn' : 'text-ink-900'}`}><Money amount={debt} showCents={false} /></div>
+          <div className="text-[10px] text-ink-500">{liabilities.filter(l => l.isActive).length} active liabilit{liabilities.filter(l => l.isActive).length === 1 ? 'y' : 'ies'}</div>
         </Cell>
       </div>
 
@@ -152,13 +154,13 @@ export default function Dashboard() {
           <div className="flex items-center justify-between gap-4">
             <div>
               <Tag>Credit Card Runway</Tag>
-              <div className="text-[13px] text-ink-50 font-semibold mt-1">{cc.name}</div>
-              <div className="text-[11px] text-ink-200">Due in {runway.daysUntilDue} days · {fmtDate(cc.dueDate!)}</div>
+              <div className="text-[13px] text-ink-900 font-semibold mt-1">{cc.name}</div>
+              <div className="text-[11px] text-ink-500">Due in {runway.daysUntilDue} days · {fmtDate(cc.dueDate!)}</div>
             </div>
             <div className="text-right">
               <div className="num-md text-warn"><Money amount={cc.balance} /></div>
               <div className={`text-[11px] font-semibold mt-0.5 ${runway.onTrack ? 'text-accent' : 'text-danger'}`}>
-                {runway.onTrack ? '✓ On track' : `Short by ${fmt(runway.shortfall)}`}
+                {runway.onTrack ? '✓ On track' : `Short by ${maskedFmt(runway.shortfall)}`}
               </div>
             </div>
           </div>
@@ -191,10 +193,10 @@ export default function Dashboard() {
                 <div key={tier.id} className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-1.5">
                     <div className="flex items-center gap-2 min-w-0">
-                      <div className="w-5 h-5 rounded-md bg-ink-700 text-ink-50 grid place-items-center text-[10px] font-bold shrink-0">{tier.priority}</div>
-                      <span className="text-[11px] font-semibold text-ink-50 truncate">{tier.name}</span>
+                      <div className="w-5 h-5 rounded-md bg-paper-100 text-ink-900 grid place-items-center text-[10px] font-bold shrink-0">{tier.priority}</div>
+                      <span className="text-[11px] font-semibold text-ink-900 truncate">{tier.name}</span>
                     </div>
-                    <span className="text-[10px] text-ink-200 tabular shrink-0">
+                    <span className="text-[10px] text-ink-500 tabular shrink-0">
                       {isUnlimited ? '∞' : `${cap > 0 ? Math.round((progress / cap) * 100) : 0}%`}
                     </span>
                   </div>
@@ -214,7 +216,7 @@ export default function Dashboard() {
           help={<p>Total of every <strong>active</strong> fixed expense, normalized to a monthly amount (a $300/biweekly bill becomes ~$650/mo). Includes all payment methods — Bank Transfer, Credit Card, etc. Edit in Manage → Expenses.</p>}
         >
           <Tag>Monthly Out</Tag>
-          <div className="num-md text-ink-50"><Money amount={monthlyExp} showCents={false} /></div>
+          <div className="num-md text-ink-900"><Money amount={monthlyExp} showCents={false} /></div>
           <Link to="/payday" className="btn-primary text-center justify-center mt-1">Log paycheck ↑</Link>
         </Cell>
       </div>

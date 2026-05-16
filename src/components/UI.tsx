@@ -3,7 +3,17 @@
 
 import { useEffect, useState } from 'react';
 import { fmt } from '../core/dates';
+import { useAppUI } from '../store/useAppStore';
 import type { ReactNode, CSSProperties } from 'react';
+
+const MASK = '••••';
+
+/** Hook returning a fmt() that respects the global privacy toggle. */
+export function useMaskedFmt() {
+  const privacy = useAppUI(s => s.privacyMode);
+  return (amount: number, opts?: { showCents?: boolean; showSign?: boolean }) =>
+    privacy ? MASK : fmt(amount, opts);
+}
 
 // ─── Cell ─────────────────────────────────────────────────────
 export function Cell({
@@ -56,29 +66,29 @@ function CellHelpBadge({ title, body, onGreen }: { title?: string; body: ReactNo
         className={`absolute top-2 right-2 w-5 h-5 rounded-full flex items-center justify-center text-[11px] font-bold transition-colors ${
           onGreen
             ? 'bg-black/15 text-black/70 hover:bg-black/25'
-            : 'bg-ink-700 text-ink-200 hover:bg-ink-600 hover:text-ink-50'
+            : 'bg-paper-100 text-ink-500 hover:bg-paper-200 hover:text-ink-900'
         }`}
       >
         ?
       </button>
       {open && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-ink-900/70 backdrop-blur-sm p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-paper-50/70 backdrop-blur-sm p-4"
           onClick={() => setOpen(false)}
         >
           <div
-            className="bg-ink-800 border border-ink-600 rounded-cell shadow-2xl max-w-md w-full p-5"
+            className="bg-white border border-paper-300 rounded-cell shadow-2xl max-w-md w-full p-5"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-3 mb-2">
-              <div className="text-sm font-semibold text-ink-50">{title ?? 'About this cell'}</div>
+              <div className="text-sm font-semibold text-ink-900">{title ?? 'About this cell'}</div>
               <button
-                className="text-ink-400 hover:text-ink-50 text-lg leading-none"
+                className="text-ink-400 hover:text-ink-900 text-lg leading-none"
                 onClick={() => setOpen(false)}
                 aria-label="Close"
               >×</button>
             </div>
-            <div className="text-xs text-ink-200 leading-relaxed space-y-2">{body}</div>
+            <div className="text-xs text-ink-500 leading-relaxed space-y-2">{body}</div>
             <div className="text-[10px] text-ink-400 mt-3">Press Esc or click outside to close.</div>
           </div>
         </div>
@@ -98,7 +108,8 @@ export function Tag({ children, onGreen = false, className = '' }: {
 export function Money({ amount, className = '', showCents = true, showSign = false }: {
   amount: number; className?: string; showCents?: boolean; showSign?: boolean;
 }) {
-  return <span className={`tabular ${className}`}>{fmt(amount, { showCents, showSign })}</span>;
+  const privacy = useAppUI(s => s.privacyMode);
+  return <span className={`tabular ${className}`}>{privacy ? MASK : fmt(amount, { showCents, showSign })}</span>;
 }
 
 // ─── Currency input ───────────────────────────────────────────
@@ -109,7 +120,7 @@ export function CurrencyInput({
 }) {
   return (
     <div className={`relative ${className}`}>
-      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-200 text-[13px]">$</span>
+      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-500 text-[13px]">$</span>
       <input
         type="number"
         step="0.01"
@@ -162,7 +173,7 @@ export function Section({ title, action, children }: { title: string; action?: R
   return (
     <section className="mb-6">
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-[14px] font-bold tracking-tight text-ink-50">{title}</h2>
+        <h2 className="text-[14px] font-bold tracking-tight text-ink-900">{title}</h2>
         {action}
       </div>
       {children}
@@ -175,17 +186,19 @@ export function StatCard({ label, value, subtext, tone = 'default' }: {
   label: string; value: string | number; subtext?: string;
   tone?: 'default' | 'accent' | 'warn' | 'danger';
 }) {
+  const privacy = useAppUI(s => s.privacyMode);
   const numClass = tone === 'accent' ? 'text-accent'
                 : tone === 'warn'   ? 'text-warn'
                 : tone === 'danger' ? 'text-danger'
-                : 'text-ink-50';
+                : 'text-ink-900';
+  const display = typeof value === 'number'
+    ? (privacy ? MASK : fmt(value, { showCents: false }))
+    : value;
   return (
     <Cell className="cell-flex cell-pad-sm">
       <Tag>{label}</Tag>
-      <div className={`num-md ${numClass}`}>
-        {typeof value === 'number' ? fmt(value, { showCents: false }) : value}
-      </div>
-      {subtext && <div className="text-[10px] text-ink-200">{subtext}</div>}
+      <div className={`num-md ${numClass}`}>{display}</div>
+      {subtext && <div className="text-[10px] text-ink-500">{subtext}</div>}
     </Cell>
   );
 }

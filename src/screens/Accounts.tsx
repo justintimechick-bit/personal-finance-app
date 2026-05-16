@@ -31,7 +31,7 @@ export default function Accounts() {
   const [editingAcctId, setEditingAcctId] = useState<number | null>(null);
   const [editingLiabId, setEditingLiabId] = useState<number | null>(null);
 
-  if (!accountsRaw || !liabilities) return <div className="text-ink-200 p-8">Loading…</div>;
+  if (!accountsRaw || !liabilities) return <div className="text-ink-500 p-8">Loading…</div>;
 
   const accounts = [...accountsRaw].sort((a, b) => {
     const ao = a.sortOrder ?? 1e9, bo = b.sortOrder ?? 1e9;
@@ -107,8 +107,8 @@ export default function Accounts() {
           help={<p>Sum of every <strong>active</strong> liability. Inactive ones (toggled off after payoff) are excluded. Pay down a debt by allocating to it on the Payday screen.</p>}
         >
           <Tag>Total Debt</Tag>
-          <div className={`num-md ${totalLiab > 0 ? 'text-warn' : 'text-ink-50'}`}><Money amount={totalLiab} showCents={false} /></div>
-          <div className="text-[10px] text-ink-200">{liabilities.filter(l => l.isActive).length} active</div>
+          <div className={`num-md ${totalLiab > 0 ? 'text-warn' : 'text-ink-900'}`}><Money amount={totalLiab} showCents={false} /></div>
+          <div className="text-[10px] text-ink-500">{liabilities.filter(l => l.isActive).length} active</div>
         </Cell>
         <Cell
           className="cell-flex cell-pad-sm"
@@ -116,10 +116,10 @@ export default function Accounts() {
           help={<p>Total Assets minus Total Debt. Identical to the value shown on the Dashboard hero card.</p>}
         >
           <Tag>Net Worth</Tag>
-          <div className={`num-md ${totalAssets - totalLiab >= 0 ? 'text-ink-50' : 'text-danger'}`}>
+          <div className={`num-md ${totalAssets - totalLiab >= 0 ? 'text-ink-900' : 'text-danger'}`}>
             <Money amount={totalAssets - totalLiab} showCents={false} />
           </div>
-          <div className="text-[10px] text-ink-200">Assets − Debt</div>
+          <div className="text-[10px] text-ink-500">Assets − Debt</div>
         </Cell>
         <Cell className="cell-flex cell-pad-sm">
           <Tag>Quick Actions</Tag>
@@ -135,21 +135,21 @@ export default function Accounts() {
         <Tag>Accounts</Tag>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
           {accounts.map((a, i) => (
-            <div key={a.id} className="bg-ink-700 border border-ink-600 rounded-cell p-3">
+            <div key={a.id} className="bg-paper-100 border border-paper-300 rounded-cell p-3">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex flex-col gap-0.5 pt-0.5 shrink-0">
-                  <button className="text-ink-200 hover:text-ink-50 disabled:opacity-20 text-[10px] leading-none" disabled={i === 0} onClick={() => moveAccount(a.id, -1)}>▲</button>
-                  <button className="text-ink-200 hover:text-ink-50 disabled:opacity-20 text-[10px] leading-none" disabled={i === accounts.length - 1} onClick={() => moveAccount(a.id, 1)}>▼</button>
+                  <button className="text-ink-500 hover:text-ink-900 disabled:opacity-20 text-[10px] leading-none" disabled={i === 0} onClick={() => moveAccount(a.id, -1)}>▲</button>
+                  <button className="text-ink-500 hover:text-ink-900 disabled:opacity-20 text-[10px] leading-none" disabled={i === accounts.length - 1} onClick={() => moveAccount(a.id, 1)}>▼</button>
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <input className="bg-transparent border-0 focus:outline-none text-[13px] font-semibold text-ink-50 min-w-0 flex-1" value={a.name} onChange={e => updateAccountField(a.id, 'name', e.target.value)} />
-                    <select className="bg-ink-600 border border-ink-500 rounded px-1.5 py-0.5 text-[10px]" value={a.type} onChange={e => updateAccountField(a.id, 'type', e.target.value)}>
+                    <input className="bg-transparent border-0 focus:outline-none text-[13px] font-semibold text-ink-900 min-w-0 flex-1" value={a.name} onChange={e => updateAccountField(a.id, 'name', e.target.value)} />
+                    <select className="bg-paper-200 border border-paper-400 rounded px-1.5 py-0.5 text-[10px]" value={a.type} onChange={e => updateAccountField(a.id, 'type', e.target.value)}>
                       {ACCOUNT_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                     </select>
                     {a.openedYet === false && <span className="chip-warn">Not open</span>}
                   </div>
-                  <input className="bg-transparent border-0 focus:outline-none text-[10px] text-ink-200 w-full" value={a.institution ?? ''} placeholder="Institution" onChange={e => updateAccountField(a.id, 'institution', e.target.value)} />
+                  <input className="bg-transparent border-0 focus:outline-none text-[10px] text-ink-500 w-full" value={a.institution ?? ''} placeholder="Institution" onChange={e => updateAccountField(a.id, 'institution', e.target.value)} />
                 </div>
                 <div className="text-right shrink-0">
                   {editingAcctId === a.id ? (
@@ -158,15 +158,15 @@ export default function Accounts() {
                       <button className="btn-primary" onClick={() => updateAccountBalance(a.id, a.balance)}>✓</button>
                     </div>
                   ) : (
-                    <button className="text-right hover:bg-ink-600 px-2 py-1 rounded-lg" onClick={() => setEditingAcctId(a.id)}>
-                      <div className="num-sm text-ink-50"><Money amount={a.balance} showCents={false} /></div>
-                      <div className="text-[9px] text-ink-200">{fmtDate(a.lastUpdated)}</div>
+                    <button className="text-right hover:bg-paper-200 px-2 py-1 rounded-lg" onClick={() => setEditingAcctId(a.id)}>
+                      <div className="num-sm text-ink-900"><Money amount={a.balance} showCents={false} /></div>
+                      <div className="text-[9px] text-ink-500">{fmtDate(a.lastUpdated)}</div>
                     </button>
                   )}
                 </div>
               </div>
               <div className="flex items-center justify-between mt-1.5 text-[10px]">
-                <label className="text-ink-200 flex items-center gap-1.5">
+                <label className="text-ink-500 flex items-center gap-1.5">
                   <input type="checkbox" checked={a.openedYet !== false} onChange={e => updateAccountField(a.id, 'openedYet', e.target.checked)} />
                   Open
                 </label>
@@ -182,25 +182,25 @@ export default function Accounts() {
         <Tag>Liabilities</Tag>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mt-2">
           {liabilities.map(l => (
-            <div key={l.id} className="bg-ink-700 border border-ink-600 rounded-cell p-3">
+            <div key={l.id} className="bg-paper-100 border border-paper-300 rounded-cell p-3">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 flex-wrap">
-                    <input className="bg-transparent border-0 focus:outline-none text-[13px] font-semibold text-ink-50 min-w-0 flex-1" value={l.name} onChange={e => updateLiabilityField(l.id, 'name', e.target.value)} />
-                    <select className="bg-ink-600 border border-ink-500 rounded px-1.5 py-0.5 text-[10px]" value={l.type} onChange={e => updateLiabilityField(l.id, 'type', e.target.value)}>
+                    <input className="bg-transparent border-0 focus:outline-none text-[13px] font-semibold text-ink-900 min-w-0 flex-1" value={l.name} onChange={e => updateLiabilityField(l.id, 'name', e.target.value)} />
+                    <select className="bg-paper-200 border border-paper-400 rounded px-1.5 py-0.5 text-[10px]" value={l.type} onChange={e => updateLiabilityField(l.id, 'type', e.target.value)}>
                       {LIABILITY_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                     </select>
                     {!l.isActive && <span className="chip-muted">Inactive</span>}
                   </div>
-                  <div className="text-[10px] text-ink-200 mt-1 flex flex-wrap gap-2">
+                  <div className="text-[10px] text-ink-500 mt-1 flex flex-wrap gap-2">
                     <label className="flex items-center gap-1">APR
-                      <input type="number" step="0.01" className="w-12 bg-transparent border-b border-ink-500 focus:outline-none" value={l.apr} onChange={e => updateLiabilityField(l.id, 'apr', parseFloat(e.target.value) || 0)} />%
+                      <input type="number" step="0.01" className="w-12 bg-transparent border-b border-paper-400 focus:outline-none" value={l.apr} onChange={e => updateLiabilityField(l.id, 'apr', parseFloat(e.target.value) || 0)} />%
                     </label>
                     <label className="flex items-center gap-1">Min
-                      <input type="number" step="0.01" className="w-16 bg-transparent border-b border-ink-500 focus:outline-none" value={l.minimumPayment} onChange={e => updateLiabilityField(l.id, 'minimumPayment', parseFloat(e.target.value) || 0)} />
+                      <input type="number" step="0.01" className="w-16 bg-transparent border-b border-paper-400 focus:outline-none" value={l.minimumPayment} onChange={e => updateLiabilityField(l.id, 'minimumPayment', parseFloat(e.target.value) || 0)} />
                     </label>
                     <label className="flex items-center gap-1">Due
-                      <input type="date" className="bg-transparent border-b border-ink-500 focus:outline-none" value={l.dueDate ?? ''} onChange={e => updateLiabilityField(l.id, 'dueDate', e.target.value)} />
+                      <input type="date" className="bg-transparent border-b border-paper-400 focus:outline-none" value={l.dueDate ?? ''} onChange={e => updateLiabilityField(l.id, 'dueDate', e.target.value)} />
                     </label>
                   </div>
                 </div>
@@ -211,15 +211,15 @@ export default function Accounts() {
                       <button className="btn-primary" onClick={() => updateLiabilityBalance(l.id, l.balance)}>✓</button>
                     </div>
                   ) : (
-                    <button className="text-right hover:bg-ink-600 px-2 py-1 rounded-lg" onClick={() => setEditingLiabId(l.id)}>
+                    <button className="text-right hover:bg-paper-200 px-2 py-1 rounded-lg" onClick={() => setEditingLiabId(l.id)}>
                       <div className="num-sm text-warn"><Money amount={l.balance} showCents={false} /></div>
-                      <div className="text-[9px] text-ink-200">edit</div>
+                      <div className="text-[9px] text-ink-500">edit</div>
                     </button>
                   )}
                 </div>
               </div>
               <div className="flex items-center justify-between mt-1.5 text-[10px]">
-                <label className="text-ink-200 flex items-center gap-1.5">
+                <label className="text-ink-500 flex items-center gap-1.5">
                   <input type="checkbox" checked={l.isActive} onChange={e => updateLiabilityField(l.id, 'isActive', e.target.checked)} />
                   Active
                 </label>

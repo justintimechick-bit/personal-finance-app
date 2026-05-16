@@ -142,7 +142,7 @@ export default function App() {
 
   if (isBootstrapping) {
     return (
-      <div className="h-full grid place-items-center text-ink-300">
+      <div className="h-full grid place-items-center text-ink-400">
         <div className="text-center">
           <div className="animate-pulse text-lg mb-2">Loading…</div>
           <div className="text-xs">Checking for cloud sync</div>
@@ -153,7 +153,7 @@ export default function App() {
 
   if (configError) {
     return (
-      <div className="h-full grid place-items-center bg-ink-900 text-ink-50">
+      <div className="h-full grid place-items-center bg-paper-50 text-ink-900">
         <div className="text-center max-w-sm px-6">
           <div className="flex justify-center mb-6">
             <div className="w-14 h-14 rounded-2xl bg-danger/20 text-danger grid place-items-center text-2xl select-none">
@@ -161,8 +161,8 @@ export default function App() {
             </div>
           </div>
           <h1 className="text-xl font-bold mb-3">Configuration Error</h1>
-          <p className="text-sm text-ink-300 leading-relaxed">
-            <code className="text-ink-100 bg-ink-800 px-1 py-0.5 rounded text-xs">VITE_GOOGLE_OAUTH_CLIENT_ID</code>{' '}
+          <p className="text-sm text-ink-400 leading-relaxed">
+            <code className="text-ink-700 bg-white px-1 py-0.5 rounded text-xs">VITE_GOOGLE_OAUTH_CLIENT_ID</code>{' '}
             is not set. Set this environment variable and rebuild the app to enable Google Sign-In.
           </p>
         </div>

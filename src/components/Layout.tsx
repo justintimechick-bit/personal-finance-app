@@ -17,7 +17,7 @@ const NAV = [
 ];
 
 export default function Layout() {
-  const { driveUser, driveStatus, lastSyncedAt, lastEditedAt, toast, markSynced, setDriveStatus, showToast } = useAppUI();
+  const { driveUser, driveStatus, lastSyncedAt, lastEditedAt, toast, markSynced, setDriveStatus, showToast, privacyMode, togglePrivacy } = useAppUI();
   const settings = useLiveQuery(() => db.settings.get(1), []);
 
   // Tick once every 30s to keep "X ago" timestamps fresh without heavier plumbing.
@@ -90,10 +90,10 @@ export default function Layout() {
 
   const dotColor = signedIn ? (dirty ? 'bg-warn' : 'bg-accent')
                   : driveStatus === 'token_expired' ? 'bg-warn'
-                  : 'bg-ink-300';
+                  : 'bg-paper-400';
   const textColor = signedIn ? (dirty ? 'text-warn' : 'text-accent')
                    : driveStatus === 'token_expired' ? 'text-warn'
-                   : 'text-ink-200';
+                   : 'text-ink-500';
 
   const oauthConfigured = isConfigured();
 
@@ -106,13 +106,13 @@ export default function Layout() {
             <InlineEdit
               value={appName}
               onSave={saveAppName}
-              className="sidebar-title block w-full bg-transparent border-0 focus:outline-none focus:bg-ink-700/40 rounded px-1 -mx-1"
+              className="sidebar-title block w-full bg-transparent border-0 focus:outline-none focus:bg-paper-100/40 rounded px-1 -mx-1"
               placeholder="App name"
             />
             <InlineEdit
               value={appTagline}
               onSave={saveAppTagline}
-              className="sidebar-sub block w-full bg-transparent border-0 focus:outline-none focus:bg-ink-700/40 rounded px-1 -mx-1"
+              className="sidebar-sub block w-full bg-transparent border-0 focus:outline-none focus:bg-paper-100/40 rounded px-1 -mx-1"
               placeholder="Tagline"
             />
           </div>
@@ -132,6 +132,16 @@ export default function Layout() {
             </NavLink>
           ))}
         </nav>
+        <button
+          type="button"
+          onClick={togglePrivacy}
+          aria-label={privacyMode ? 'Show amounts' : 'Hide amounts'}
+          title={privacyMode ? 'Show amounts' : 'Hide amounts'}
+          className="mx-2 mb-2 inline-flex items-center justify-center gap-1.5 rounded-lg bg-paper-100 border border-paper-300 px-2.5 py-1.5 text-[11px] font-semibold text-ink-700 hover:bg-paper-200 transition-colors"
+        >
+          <span aria-hidden className="text-[13px] leading-none">{privacyMode ? '🙈' : '👁'}</span>
+          <span>{privacyMode ? 'Show $' : 'Hide $'}</span>
+        </button>
         <div className="sidebar-status flex flex-col gap-1.5 items-start">
           <div className="flex items-center gap-1.5 truncate w-full">
             {signedIn && driveUser?.pictureUrl ? (

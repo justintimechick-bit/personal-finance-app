@@ -30,7 +30,7 @@ export function GoogleSignInWall({ onSuccess }: GoogleSignInWallProps) {
   }
 
   return (
-    <div className="h-full grid place-items-center bg-ink-900 text-ink-50">
+    <div className="h-full grid place-items-center bg-paper-50 text-ink-900">
       <div className="text-center max-w-sm w-full px-6">
         {/* App branding */}
         <div className="flex justify-center mb-6">
@@ -38,8 +38,8 @@ export function GoogleSignInWall({ onSuccess }: GoogleSignInWallProps) {
             F
           </div>
         </div>
-        <h1 className="text-2xl font-black tracking-tight text-ink-50 mb-1">Finance</h1>
-        <p className="text-[13px] text-ink-200 mb-8 leading-relaxed">
+        <h1 className="text-2xl font-black tracking-tight text-ink-900 mb-1">Finance</h1>
+        <p className="text-[13px] text-ink-500 mb-8 leading-relaxed">
           Sign in with Google to access your personal finance data.
           Your finances sync to a single JSON file in your own Google Drive.
         </p>

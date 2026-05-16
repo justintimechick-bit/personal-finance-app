@@ -12,6 +12,7 @@ interface AppUIState {
   lastSyncedAt: number | null;
   lastEditedAt: number | null;
   toast: { message: string; kind: 'info' | 'success' | 'error' } | null;
+  privacyMode: boolean;
   setBootstrapping: (v: boolean) => void;
   setNeedsOnboarding: (v: boolean) => void;
   setAuthRequired: (v: boolean) => void;
@@ -20,9 +21,15 @@ interface AppUIState {
   markEdited: () => void;
   showToast: (message: string, kind?: 'info' | 'success' | 'error') => void;
   clearToast: () => void;
+  togglePrivacy: () => void;
 }
 
-export const useAppUI = create<AppUIState>((set) => ({
+const PRIVACY_KEY = 'finance.privacyMode';
+const initialPrivacy = (() => {
+  try { return localStorage.getItem(PRIVACY_KEY) === '1'; } catch { return false; }
+})();
+
+export const useAppUI = create<AppUIState>((set, get) => ({
   isBootstrapping: true,
   needsOnboarding: false,
   authRequired: false,
@@ -31,6 +38,7 @@ export const useAppUI = create<AppUIState>((set) => ({
   lastSyncedAt: null,
   lastEditedAt: null,
   toast: null,
+  privacyMode: initialPrivacy,
   setBootstrapping: (v) => set({ isBootstrapping: v }),
   setNeedsOnboarding: (v) => set({ needsOnboarding: v }),
   setAuthRequired: (v) => set({ authRequired: v }),
@@ -42,4 +50,9 @@ export const useAppUI = create<AppUIState>((set) => ({
     setTimeout(() => set({ toast: null }), 3500);
   },
   clearToast: () => set({ toast: null }),
+  togglePrivacy: () => {
+    const next = !get().privacyMode;
+    try { localStorage.setItem(PRIVACY_KEY, next ? '1' : '0'); } catch {}
+    set({ privacyMode: next });
+  },
 }));

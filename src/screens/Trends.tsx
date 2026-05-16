@@ -6,7 +6,7 @@ import { Cell, Tag, Money, Spark } from '../components/UI';
 export default function Trends() {
   const snapshots = useLiveQuery(() => db.netWorthSnapshots.orderBy('date').toArray(), []);
 
-  if (!snapshots) return <div className="text-ink-200 p-8">Loading…</div>;
+  if (!snapshots) return <div className="text-ink-500 p-8">Loading…</div>;
 
   const chartData = snapshots.map(s => ({
     date: s.date.slice(5, 10),
@@ -30,8 +30,8 @@ export default function Trends() {
         </div>
         <Cell className="flex-1 grid place-items-center">
           <div className="text-center">
-            <div className="text-[14px] text-ink-50 font-semibold mb-1">Not enough history yet</div>
-            <div className="text-[11px] text-ink-200">Run a few paychecks on the Payday screen to build a trend.</div>
+            <div className="text-[14px] text-ink-900 font-semibold mb-1">Not enough history yet</div>
+            <div className="text-[11px] text-ink-500">Run a few paychecks on the Payday screen to build a trend.</div>
           </div>
         </Cell>
       </>
@@ -112,8 +112,8 @@ export default function Trends() {
         <SparkStat label="Credit Cards" amount={latest.totalCreditCard} color="#ef4444" data={chartData.map(d => d.credit ?? 0)} />
         <Cell className="cell-flex cell-pad-sm">
           <Tag>Last Snapshot</Tag>
-          <div className="num-md text-ink-50">{latest.date.slice(5, 10)}</div>
-          <div className="text-[10px] text-ink-200">Captured {latest.date.slice(0, 10)}</div>
+          <div className="num-md text-ink-900">{latest.date.slice(5, 10)}</div>
+          <div className="text-[10px] text-ink-500">Captured {latest.date.slice(0, 10)}</div>
         </Cell>
       </div>
     </>
@@ -126,7 +126,7 @@ function SparkStat({ label, amount, color, data }: { label: string; amount: numb
       <Tag>{label}</Tag>
       <div className="flex items-baseline justify-between gap-2">
         <div className="num-md tabular" style={{ color }}>
-          {amount == null ? <span className="text-ink-300">—</span> : <Money amount={amount} showCents={false} />}
+          {amount == null ? <span className="text-ink-400">—</span> : <Money amount={amount} showCents={false} />}
         </div>
         {data.length > 1 && <Spark data={data.filter(d => d != null)} color={color} width={70} height={28} />}
       </div>

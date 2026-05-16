@@ -20,7 +20,7 @@ export default function Settings() {
   const [xlsxParsing, setXlsxParsing] = useState(false);
   const [xlsxImporting, setXlsxImporting] = useState(false);
 
-  if (!settings) return <div className="text-ink-200 p-8">Loading…</div>;
+  if (!settings) return <div className="text-ink-500 p-8">Loading…</div>;
 
   const oauthConfigured = isConfigured();
   const signedIn = driveStatus === 'signed_in';
@@ -153,14 +153,14 @@ export default function Settings() {
               {signedIn && driveUser?.pictureUrl && (
                 <img src={driveUser.pictureUrl} alt="" referrerPolicy="no-referrer" className="w-6 h-6 rounded-full" />
               )}
-              <div className={`text-[14px] font-bold truncate ${signedIn ? 'text-black' : driveStatus === 'token_expired' ? 'text-warn' : 'text-ink-50'}`}>
+              <div className={`text-[14px] font-bold truncate ${signedIn ? 'text-black' : driveStatus === 'token_expired' ? 'text-warn' : 'text-ink-900'}`}>
                 {signedIn ? (driveUser?.email ?? 'Signed in')
                  : driveStatus === 'token_expired' ? 'Re-sign in needed'
                  : oauthConfigured ? 'Not signed in'
                  : 'Cloud sync not configured'}
               </div>
             </div>
-            <div className={`text-[11px] mt-0.5 ${signedIn ? '' : 'text-ink-200'}`} style={signedIn ? {color:'rgba(0,0,0,0.55)'} : {}}>
+            <div className={`text-[11px] mt-0.5 ${signedIn ? '' : 'text-ink-500'}`} style={signedIn ? {color:'rgba(0,0,0,0.55)'} : {}}>
               {signedIn ? 'Auto-syncing on every change. File: finance-app-data.json in Drive.'
                : driveStatus === 'token_expired' ? 'Your Google session expired — sign back in to resume sync.'
                : oauthConfigured ? 'Sign in to sync this app across devices via your Google Drive.'
@@ -191,7 +191,7 @@ export default function Settings() {
         >
           <Tag>CC Reserve Buffer</Tag>
           <CurrencyInput value={settings.ccReserveBuffer} onChange={v => updateSetting('ccReserveBuffer', v)} />
-          <div className="text-[10px] text-ink-200 mt-1">Tier 0 keeps CC balance + this buffer in checking.</div>
+          <div className="text-[10px] text-ink-500 mt-1">Tier 0 keeps CC balance + this buffer in checking.</div>
         </Cell>
         <Cell
           className="cell-flex cell-pad-sm"
@@ -200,7 +200,7 @@ export default function Settings() {
         >
           <Tag>Target Savings Rate</Tag>
           <input type="number" step="0.01" min="0" max="1" className="input" value={settings.targetSavingsRate} onChange={e => updateSetting('targetSavingsRate', parseFloat(e.target.value) || 0)} />
-          <div className="text-[10px] text-ink-200 mt-1">0.5 = 50%. Drives the Dashboard rate bar.</div>
+          <div className="text-[10px] text-ink-500 mt-1">0.5 = 50%. Drives the Dashboard rate bar.</div>
         </Cell>
         <Cell
           className="cell-flex cell-pad-sm"
@@ -209,7 +209,7 @@ export default function Settings() {
         >
           <Tag>Roth Contribution Year</Tag>
           <input type="number" className="input tabular" value={settings.rothContributionYear} onChange={e => updateSetting('rothContributionYear', parseInt(e.target.value) || new Date().getFullYear())} />
-          <div className="text-[10px] text-ink-200 mt-1">Tax year contributions count against.</div>
+          <div className="text-[10px] text-ink-500 mt-1">Tax year contributions count against.</div>
         </Cell>
         <Cell
           className="cell-flex cell-pad-sm"
@@ -218,7 +218,7 @@ export default function Settings() {
         >
           <Tag>Roth Annual Cap</Tag>
           <CurrencyInput value={settings.rothAnnualCap} onChange={v => updateSetting('rothAnnualCap', v)} />
-          <div className="text-[10px] text-ink-200 mt-1">IRS Roth IRA contribution limit.</div>
+          <div className="text-[10px] text-ink-500 mt-1">IRS Roth IRA contribution limit.</div>
         </Cell>
       </div>
 
@@ -233,7 +233,7 @@ export default function Settings() {
         </>}
       >
         <Tag>Bulk Setup From File</Tag>
-        <div className="text-[10px] text-ink-200 mt-1 mb-3">Replace all data with an Excel workbook. Validation preview before anything is written.</div>
+        <div className="text-[10px] text-ink-500 mt-1 mb-3">Replace all data with an Excel workbook. Validation preview before anything is written.</div>
         {!xlsxPreview ? (
           <div className="flex flex-wrap gap-2">
             <a href="/finance-setup-template.xlsx" download className="btn-ghost">Download template (.xlsx)</a>
@@ -250,7 +250,7 @@ export default function Settings() {
       {/* Manual backup */}
       <Cell className="mb-2">
         <Tag>Manual Backup</Tag>
-        <div className="text-[10px] text-ink-200 mt-1 mb-3">JSON snapshot of all data.</div>
+        <div className="text-[10px] text-ink-500 mt-1 mb-3">JSON snapshot of all data.</div>
         <div className="flex flex-wrap gap-2">
           <button className="btn-ghost" onClick={handleDownload}>Download backup</button>
           <button className="btn-ghost" onClick={() => uploadRef.current?.click()}>Upload backup…</button>
@@ -263,11 +263,11 @@ export default function Settings() {
         <Tag>Danger Zone</Tag>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">
           <div>
-            <div className="text-[11px] text-ink-100 mb-2">Reset to seed: wipes paycheck history and balance changes, restores Chase Checking / Apple Savings / tier waterfall.</div>
+            <div className="text-[11px] text-ink-700 mb-2">Reset to seed: wipes paycheck history and balance changes, restores Chase Checking / Apple Savings / tier waterfall.</div>
             <button className="btn-danger" onClick={handleReset}>Reset to seed data</button>
           </div>
           <div>
-            <div className="text-[11px] text-ink-100 mb-2">Wipe everything to an empty workspace. No seed accounts. Start from scratch.</div>
+            <div className="text-[11px] text-ink-700 mb-2">Wipe everything to an empty workspace. No seed accounts. Start from scratch.</div>
             <button className="btn-danger" onClick={handleWipe}>Wipe all data (empty)</button>
           </div>
         </div>

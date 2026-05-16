@@ -60,7 +60,7 @@ export default function Payday() {
   }, [primaryChecking?.id, checkingReserve]);
 
   if (!accounts || !liabilities || !incomeSources || !expenses || !tiers || !history || !settings) {
-    return <div className="text-ink-200 p-8">Loading…</div>;
+    return <div className="text-ink-500 p-8">Loading…</div>;
   }
 
   const accountAllocated = Object.values(splits).reduce((s, v) => s + (v || 0), 0);
@@ -198,7 +198,7 @@ export default function Payday() {
           </>}
         >
           <Tag>Net Pay</Tag>
-          <div className="num-md text-ink-50"><Money amount={effectiveAmount} showCents={false} /></div>
+          <div className="num-md text-ink-900"><Money amount={effectiveAmount} showCents={false} /></div>
           <CurrencyInput value={amount} onChange={setAmount} />
         </Cell>
         <Cell
@@ -211,7 +211,7 @@ export default function Payday() {
         >
           <Tag>Allocated</Tag>
           <div className="num-md text-accent"><Money amount={allocated} showCents={false} /></div>
-          <div className="text-[10px] text-ink-200">Reserve: <Money amount={checkingReserve} showCents={false} /></div>
+          <div className="text-[10px] text-ink-500">Reserve: <Money amount={checkingReserve} showCents={false} /></div>
         </Cell>
         <Cell
           variant={remainingVariant}
@@ -226,7 +226,7 @@ export default function Payday() {
           <div className={`num-md ${remainingVariant === 'green' ? 'text-black' : remainingTone}`}>
             <Money amount={remaining} showSign showCents={false} />
           </div>
-          <div className={`text-[10px] ${remainingVariant === 'green' ? '' : 'text-ink-200'}`} style={remainingVariant === 'green' ? {color:'rgba(0,0,0,0.5)'} : {}}>
+          <div className={`text-[10px] ${remainingVariant === 'green' ? '' : 'text-ink-500'}`} style={remainingVariant === 'green' ? {color:'rgba(0,0,0,0.5)'} : {}}>
             {Math.abs(remaining) < 0.01 ? 'Ready to apply' : 'Allocate every dollar'}
           </div>
         </Cell>
@@ -265,13 +265,13 @@ export default function Payday() {
             const value = splits[a.id] ?? 0;
             const suggestedAmount = suggested.get(a.name) ?? 0;
             return (
-              <div key={a.id} className="bg-ink-700 border border-ink-600 rounded-cell p-3 flex items-center justify-between gap-3">
+              <div key={a.id} className="bg-paper-100 border border-paper-300 rounded-cell p-3 flex items-center justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-[13px] font-semibold text-ink-50 truncate">{a.name}</span>
+                    <span className="text-[13px] font-semibold text-ink-900 truncate">{a.name}</span>
                     <span className="chip-muted">{a.type}</span>
                   </div>
-                  <div className="text-[10px] text-ink-200 mt-0.5 flex items-center gap-2 flex-wrap">
+                  <div className="text-[10px] text-ink-500 mt-0.5 flex items-center gap-2 flex-wrap">
                     <span>Bal <Money amount={a.balance} showCents={false} /></span>
                     {isChecking && <span className="text-warn">·  ≥ <Money amount={checkingReserve} /></span>}
                     {suggestedAmount > 0 && (
@@ -302,19 +302,19 @@ export default function Payday() {
           </>}
         >
           <Tag>Liability Paydown</Tag>
-          <div className="text-[10px] text-ink-200 mt-1 mb-3">Reduces the liability balance directly. Doesn't flow through checking.</div>
+          <div className="text-[10px] text-ink-500 mt-1 mb-3">Reduces the liability balance directly. Doesn't flow through checking.</div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             {activeLiabilities.map(l => {
               const value = liabilitySplits[l.id] ?? 0;
               const daysOut = l.dueDate ? Math.ceil((new Date(l.dueDate).getTime() - new Date(date).getTime()) / 86400000) : null;
               return (
-                <div key={l.id} className="bg-ink-700 border border-ink-600 rounded-cell p-3 flex items-center justify-between gap-3">
+                <div key={l.id} className="bg-paper-100 border border-paper-300 rounded-cell p-3 flex items-center justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="text-[13px] font-semibold text-ink-50 truncate">{l.name}</span>
+                      <span className="text-[13px] font-semibold text-ink-900 truncate">{l.name}</span>
                       <span className="chip-muted">{l.type.replace('_', ' ')}</span>
                     </div>
-                    <div className="text-[10px] text-ink-200 mt-0.5 flex items-center gap-2 flex-wrap">
+                    <div className="text-[10px] text-ink-500 mt-0.5 flex items-center gap-2 flex-wrap">
                       <span>Bal <Money amount={l.balance} showCents={false} /></span>
                       {l.apr > 0 && <span>APR {(l.apr * 100).toFixed(2)}%</span>}
                       {daysOut !== null && daysOut >= 0 && daysOut <= 30 && <span className="text-warn">{daysOut}d</span>}
@@ -352,7 +352,7 @@ export default function Payday() {
           <div className="flex-1">
             <Tag onGreen={canApply}>Confirm & Apply</Tag>
             <input
-              className={`mt-2 w-full bg-transparent border-b ${canApply ? 'border-black/20 text-black placeholder-black/40' : 'border-ink-500 text-ink-50 placeholder-ink-300'} px-1 py-1 text-[12px] focus:outline-none`}
+              className={`mt-2 w-full bg-transparent border-b ${canApply ? 'border-black/20 text-black placeholder-black/40' : 'border-paper-400 text-ink-900 placeholder-ink-300'} px-1 py-1 text-[12px] focus:outline-none`}
               value={notes} onChange={e => setNotes(e.target.value)}
               placeholder="Notes (optional)…"
             />
@@ -380,35 +380,35 @@ export default function Payday() {
               const isOpen = expandedHistory.has(p.id);
               return (
                 <div key={p.id}>
-                  <button className="w-full py-2 flex items-center justify-between hover:bg-ink-700/30 transition-colors text-left rounded px-2"
+                  <button className="w-full py-2 flex items-center justify-between hover:bg-paper-100/30 transition-colors text-left rounded px-2"
                     onClick={() => setExpandedHistory(prev => { const next = new Set(prev); if (next.has(p.id)) next.delete(p.id); else next.add(p.id); return next; })}>
                     <div className="flex items-center gap-2">
-                      <span className={`text-ink-200 text-[10px] transition-transform ${isOpen ? 'rotate-90' : ''}`}>▶</span>
+                      <span className={`text-ink-500 text-[10px] transition-transform ${isOpen ? 'rotate-90' : ''}`}>▶</span>
                       <div>
-                        <div className="text-[12px] font-semibold text-ink-50">{p.source}</div>
-                        <div className="text-[10px] text-ink-200">{fmtDate(p.date)} · {parts.join(' · ') || 'no allocations'}</div>
+                        <div className="text-[12px] font-semibold text-ink-900">{p.source}</div>
+                        <div className="text-[10px] text-ink-500">{fmtDate(p.date)} · {parts.join(' · ') || 'no allocations'}</div>
                       </div>
                     </div>
-                    <div className="text-right tabular text-[12px] text-ink-50"><Money amount={p.netAmount} showCents={false} /></div>
+                    <div className="text-right tabular text-[12px] text-ink-900"><Money amount={p.netAmount} showCents={false} /></div>
                   </button>
                   {isOpen && (
-                    <div className="px-2 pb-2 pl-7 text-[11px] divide-y divide-ink-600 bg-ink-900/40 rounded mb-1.5">
+                    <div className="px-2 pb-2 pl-7 text-[11px] divide-y divide-ink-600 bg-paper-50/40 rounded mb-1.5">
                       {p.allocations.map((a, idx) => (
                         <div key={idx} className="py-1.5 flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             {a.targetAccount
                               ? <span className="chip-green">to acct</span>
                               : <span className="chip-warn">paydown</span>}
-                            <span className="text-ink-50">{a.targetAccount || a.targetLiability}</span>
+                            <span className="text-ink-900">{a.targetAccount || a.targetLiability}</span>
                           </div>
-                          <span className="tabular text-ink-50"><Money amount={a.amount} showCents={false} /></span>
+                          <span className="tabular text-ink-900"><Money amount={a.amount} showCents={false} /></span>
                         </div>
                       ))}
-                      <div className="py-1.5 flex items-center justify-between text-ink-200">
+                      <div className="py-1.5 flex items-center justify-between text-ink-500">
                         <span>Bank-transfer reserve</span>
                         <span className="tabular">-<Money amount={p.bankExpensesPaid} showCents={false} /></span>
                       </div>
-                      {p.notes && <div className="py-1.5 text-ink-200 italic">"{p.notes}"</div>}
+                      {p.notes && <div className="py-1.5 text-ink-500 italic">"{p.notes}"</div>}
                     </div>
                   )}
                 </div>

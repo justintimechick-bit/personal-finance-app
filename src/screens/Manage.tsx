@@ -46,7 +46,7 @@ export default function Manage() {
               key={t}
               onClick={() => setTab(t)}
               className={`flex-1 px-3 py-1.5 text-[12px] font-bold capitalize rounded-lg transition-colors ${
-                tab === t ? 'bg-accent text-ink-900' : 'text-ink-200 hover:bg-ink-700'
+                tab === t ? 'bg-accent text-ink-900' : 'text-ink-500 hover:bg-paper-100'
               }`}
             >
               {t}
@@ -80,24 +80,24 @@ function IncomeTab() {
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
         {items.map(i => (
-          <div key={i.id} className="bg-ink-700 border border-ink-600 rounded-cell p-3">
+          <div key={i.id} className="bg-paper-100 border border-paper-300 rounded-cell p-3">
             <div className="flex items-start justify-between gap-2 mb-2">
-              <input className="bg-transparent border-0 focus:outline-none text-[13px] font-semibold text-ink-50 flex-1 min-w-0" value={i.name} onChange={e => update(i.id, 'name', e.target.value)} />
+              <input className="bg-transparent border-0 focus:outline-none text-[13px] font-semibold text-ink-900 flex-1 min-w-0" value={i.name} onChange={e => update(i.id, 'name', e.target.value)} />
               <CurrencyInput value={i.amount} onChange={v => update(i.id, 'amount', v)} className="w-28" />
             </div>
-            <div className="grid grid-cols-3 gap-1.5 text-[10px] text-ink-200">
-              <select className="bg-ink-600 border border-ink-500 rounded px-1.5 py-1 text-[10px]" value={i.sourceType} onChange={e => update(i.id, 'sourceType', e.target.value)}>
+            <div className="grid grid-cols-3 gap-1.5 text-[10px] text-ink-500">
+              <select className="bg-paper-200 border border-paper-400 rounded px-1.5 py-1 text-[10px]" value={i.sourceType} onChange={e => update(i.id, 'sourceType', e.target.value)}>
                 {INCOME_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
               </select>
-              <select className="bg-ink-600 border border-ink-500 rounded px-1.5 py-1 text-[10px]" value={i.cadence} onChange={e => update(i.id, 'cadence', e.target.value)}>
+              <select className="bg-paper-200 border border-paper-400 rounded px-1.5 py-1 text-[10px]" value={i.cadence} onChange={e => update(i.id, 'cadence', e.target.value)}>
                 {CADENCES.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
-              <select className="bg-ink-600 border border-ink-500 rounded px-1.5 py-1 text-[10px]" value={i.depositAccount} onChange={e => update(i.id, 'depositAccount', e.target.value)}>
+              <select className="bg-paper-200 border border-paper-400 rounded px-1.5 py-1 text-[10px]" value={i.depositAccount} onChange={e => update(i.id, 'depositAccount', e.target.value)}>
                 {accounts.map(a => <option key={a.id} value={a.name}>{a.name}</option>)}
               </select>
             </div>
             <div className="flex items-center justify-between mt-2 text-[10px]">
-              <label className="text-ink-200 flex items-center gap-1.5">
+              <label className="text-ink-500 flex items-center gap-1.5">
                 <input type="checkbox" checked={i.isActive} onChange={e => update(i.id, 'isActive', e.target.checked)} />
                 Active
               </label>
@@ -151,7 +151,7 @@ function ExpensesTab() {
         >
           <Tag>Bank Transfer</Tag>
           <div className="num-md text-info">{bankTransferCount}</div>
-          <div className="text-[10px] text-ink-200">Auto-pays from checking</div>
+          <div className="text-[10px] text-ink-500">Auto-pays from checking</div>
         </Cell>
         <Cell className="cell-flex cell-pad-sm" style={{ gridColumn: '3/5' }}>
           <Tag>Add Expense</Tag>
@@ -164,27 +164,27 @@ function ExpensesTab() {
           {items.map(e => {
             const accent = CAT_COLOR[e.category as ExpenseCategory] ?? '#71717a';
             return (
-              <div key={e.id} className="bg-ink-700 border border-ink-600 rounded-cell p-3 relative" style={{borderLeft: `3px solid ${accent}`}}>
+              <div key={e.id} className="bg-paper-100 border border-paper-300 rounded-cell p-3 relative" style={{borderLeft: `3px solid ${accent}`}}>
                 <div className="flex items-start justify-between gap-2 mb-2">
                   <div className="flex-1 min-w-0">
-                    <input className="bg-transparent border-0 focus:outline-none text-[13px] font-semibold text-ink-50 w-full" value={e.name} onChange={ev => update(e.id, 'name', ev.target.value)} />
+                    <input className="bg-transparent border-0 focus:outline-none text-[13px] font-semibold text-ink-900 w-full" value={e.name} onChange={ev => update(e.id, 'name', ev.target.value)} />
                     <div className="text-[9px] uppercase tracking-wider mt-0.5 font-bold" style={{color: accent}}>{e.category}</div>
                   </div>
                   <CurrencyInput value={e.amount} onChange={v => update(e.id, 'amount', v)} className="w-24" />
                 </div>
                 <div className="grid grid-cols-3 gap-1.5 text-[10px]">
-                  <select className="bg-ink-600 border border-ink-500 rounded px-1.5 py-1 text-[10px]" value={e.category} onChange={ev => update(e.id, 'category', ev.target.value)}>
+                  <select className="bg-paper-200 border border-paper-400 rounded px-1.5 py-1 text-[10px]" value={e.category} onChange={ev => update(e.id, 'category', ev.target.value)}>
                     {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
-                  <select className="bg-ink-600 border border-ink-500 rounded px-1.5 py-1 text-[10px]" value={e.cadence} onChange={ev => update(e.id, 'cadence', ev.target.value)}>
+                  <select className="bg-paper-200 border border-paper-400 rounded px-1.5 py-1 text-[10px]" value={e.cadence} onChange={ev => update(e.id, 'cadence', ev.target.value)}>
                     {CADENCES.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
-                  <select className="bg-ink-600 border border-ink-500 rounded px-1.5 py-1 text-[10px]" value={e.paymentMethod} onChange={ev => update(e.id, 'paymentMethod', ev.target.value)}>
+                  <select className="bg-paper-200 border border-paper-400 rounded px-1.5 py-1 text-[10px]" value={e.paymentMethod} onChange={ev => update(e.id, 'paymentMethod', ev.target.value)}>
                     {PAYMENT_METHODS.map(m => <option key={m} value={m}>{m}</option>)}
                   </select>
                 </div>
                 <div className="flex items-center justify-between mt-2 text-[10px]">
-                  <label className="text-ink-200 flex items-center gap-1.5">
+                  <label className="text-ink-500 flex items-center gap-1.5">
                     <input type="checkbox" checked={e.isActive} onChange={ev => update(e.id, 'isActive', ev.target.checked)} />
                     Active
                   </label>
@@ -219,34 +219,34 @@ function TiersTab() {
         <Tag>Allocation Waterfall — Suggestion only</Tag>
         <button className="btn-ghost" onClick={add}>+ Add tier</button>
       </div>
-      <div className="text-[10px] text-ink-200 mb-3">Lower priority fills first. Editing tiers never moves money — they only power the "Suggested" hint on Payday.</div>
+      <div className="text-[10px] text-ink-500 mb-3">Lower priority fills first. Editing tiers never moves money — they only power the "Suggested" hint on Payday.</div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
         {items.map(t => (
-          <div key={t.id} className="bg-ink-700 border border-ink-600 rounded-cell p-3">
+          <div key={t.id} className="bg-paper-100 border border-paper-300 rounded-cell p-3">
             <div className="flex items-start gap-2 mb-2">
               <div className="w-8 h-8 rounded-lg bg-accent text-ink-900 grid place-items-center font-black text-[13px] shrink-0">{t.priority}</div>
               <div className="flex-1 min-w-0">
-                <input className="bg-transparent border-0 focus:outline-none text-[13px] font-semibold text-ink-50 w-full" value={t.name} onChange={e => update(t.id, 'name', e.target.value)} />
-                <div className="text-[10px] text-ink-200">→ {t.targetAccount}</div>
+                <input className="bg-transparent border-0 focus:outline-none text-[13px] font-semibold text-ink-900 w-full" value={t.name} onChange={e => update(t.id, 'name', e.target.value)} />
+                <div className="text-[10px] text-ink-500">→ {t.targetAccount}</div>
               </div>
               <CurrencyInput value={t.cap} onChange={v => update(t.id, 'cap', v)} className="w-24" />
             </div>
             <div className="grid grid-cols-3 gap-1.5 text-[10px]">
-              <select className="bg-ink-600 border border-ink-500 rounded px-1.5 py-1 text-[10px]" value={t.capType} onChange={e => update(t.id, 'capType', e.target.value)}>
+              <select className="bg-paper-200 border border-paper-400 rounded px-1.5 py-1 text-[10px]" value={t.capType} onChange={e => update(t.id, 'capType', e.target.value)}>
                 {CAP_TYPES.map(c => <option key={c} value={c}>cap: {c}</option>)}
               </select>
-              <select className="bg-ink-600 border border-ink-500 rounded px-1.5 py-1 text-[10px]" value={t.resetCadence} onChange={e => update(t.id, 'resetCadence', e.target.value)}>
+              <select className="bg-paper-200 border border-paper-400 rounded px-1.5 py-1 text-[10px]" value={t.resetCadence} onChange={e => update(t.id, 'resetCadence', e.target.value)}>
                 {RESET_CADENCES.map(r => <option key={r} value={r}>reset: {r}</option>)}
               </select>
-              <select className="bg-ink-600 border border-ink-500 rounded px-1.5 py-1 text-[10px]" value={t.targetAccount} onChange={e => update(t.id, 'targetAccount', e.target.value)}>
+              <select className="bg-paper-200 border border-paper-400 rounded px-1.5 py-1 text-[10px]" value={t.targetAccount} onChange={e => update(t.id, 'targetAccount', e.target.value)}>
                 {accounts.map(a => <option key={a.id} value={a.name}>{a.name}</option>)}
               </select>
             </div>
             <div className="flex items-center gap-3 mt-2 text-[10px]">
-              <label className="text-ink-200 flex items-center gap-1">Pri
-                <input type="number" className="w-12 bg-ink-600 border border-ink-500 rounded px-1.5 py-0.5 tabular text-[10px]" value={t.priority} onChange={e => update(t.id, 'priority', parseInt(e.target.value) || 0)} />
+              <label className="text-ink-500 flex items-center gap-1">Pri
+                <input type="number" className="w-12 bg-paper-200 border border-paper-400 rounded px-1.5 py-0.5 tabular text-[10px]" value={t.priority} onChange={e => update(t.id, 'priority', parseInt(e.target.value) || 0)} />
               </label>
-              <label className="text-ink-200 flex items-center gap-1.5">
+              <label className="text-ink-500 flex items-center gap-1.5">
                 <input type="checkbox" checked={t.isActive} onChange={e => update(t.id, 'isActive', e.target.checked)} />
                 Active
               </label>

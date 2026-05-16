@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 html, body, #root {
@@ -11,7 +11,7 @@ html, body, #root {
 }
 
 body {
-  @apply bg-ink-900 text-ink-50 font-sans antialiased;
+  @apply bg-paper-50 text-ink-900 font-sans antialiased;
   font-feature-settings: 'ss01';
   letter-spacing: -0.005em;
 }
@@ -24,8 +24,8 @@ body {
 /* Subtle scrollbar */
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #262626; border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: #3f3f46; }
+::-webkit-scrollbar-thumb { background: #d4d4d0; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #a1a1aa; }
 
 /* ───────────────────────────────────────────────────────────── */
 /* BENTO DESIGN SYSTEM                                            */
@@ -36,27 +36,27 @@ body {
   .app-shell { @apply flex h-full font-sans; }
 
   /* Sidebar */
-  .sidebar       { @apply w-44 shrink-0 bg-ink-900 border-r border-ink-700 flex flex-col; }
-  .sidebar-brand { @apply px-4 py-5 border-b border-ink-700 flex items-center gap-2.5; }
+  .sidebar       { @apply w-44 shrink-0 bg-white border-r border-paper-300 flex flex-col; }
+  .sidebar-brand { @apply px-4 py-5 border-b border-paper-300 flex items-center gap-2.5; }
   .sidebar-mark  { @apply w-7 h-7 rounded-lg bg-accent text-ink-900 grid place-items-center font-black text-[13px] shrink-0; }
-  .sidebar-title { @apply text-[13px] font-extrabold text-ink-50 tracking-tight leading-none; }
-  .sidebar-sub   { @apply text-[10px] text-ink-200 mt-1; }
+  .sidebar-title { @apply text-[13px] font-extrabold text-ink-900 tracking-tight leading-none; }
+  .sidebar-sub   { @apply text-[10px] text-ink-400 mt-1; }
   .sidebar-nav   { @apply flex-1 px-2 py-2.5; }
-  .sidebar-link  { @apply flex items-center gap-2.5 px-2.5 py-2 rounded-[9px] mb-0.5 text-[13px] text-ink-200 border-l-2 border-transparent transition-colors hover:bg-ink-800/60; }
-  .sidebar-link-active { @apply bg-accent/10 text-accent border-accent font-semibold; }
+  .sidebar-link  { @apply flex items-center gap-2.5 px-2.5 py-2 rounded-[9px] mb-0.5 text-[13px] text-ink-400 border-l-2 border-transparent transition-colors hover:bg-paper-100; }
+  .sidebar-link-active { @apply bg-accent/10 text-accent-dim border-accent font-semibold; }
   .sidebar-icon  { @apply text-[14px] leading-none; }
-  .sidebar-status{ @apply px-3.5 py-2.5 border-t border-ink-700 flex items-center gap-1.5 text-[10px]; }
+  .sidebar-status{ @apply px-3.5 py-2.5 border-t border-paper-300 flex items-center gap-1.5 text-[10px]; }
 
   /* Main content area */
   .screen        { @apply flex-1 overflow-y-auto p-4; }
   .screen-grid   { @apply h-full max-w-[1400px] mx-auto flex flex-col; }
   .screen-header { @apply flex justify-between items-center mb-3 px-0.5; }
   .screen-title  { @apply text-[18px] font-black tracking-tight; }
-  .screen-meta   { @apply text-[11px] text-ink-200; }
+  .screen-meta   { @apply text-[11px] text-ink-400; }
 
   /* Bento cell — base */
   .cell {
-    @apply bg-ink-800 border border-ink-600 rounded-cell p-4;
+    @apply bg-white border border-paper-300 rounded-cell p-4;
   }
   .cell-green {
     background: #4ade80;
@@ -80,7 +80,7 @@ body {
 
   /* Tag (uppercase microlabel) */
   .tag {
-    @apply text-[9px] font-bold uppercase tracking-[0.08em] text-ink-200;
+    @apply text-[9px] font-bold uppercase tracking-[0.08em] text-ink-400;
   }
   .tag-on-green {
     @apply text-[9px] font-bold uppercase tracking-[0.08em];
@@ -99,29 +99,29 @@ body {
     @apply inline-flex items-center justify-center gap-2 rounded-lg px-3 py-1.5 text-[12px] font-semibold transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/60 disabled:opacity-40 disabled:cursor-not-allowed;
   }
   .btn-primary { @apply btn bg-accent text-ink-900 hover:bg-accent-dim font-bold; }
-  .btn-ghost   { @apply btn bg-ink-700 text-ink-50 hover:bg-ink-600; }
+  .btn-ghost   { @apply btn bg-paper-100 text-ink-900 hover:bg-paper-200 border border-paper-300; }
   .btn-danger  { @apply btn font-bold; background: rgba(239,68,68,0.12); border:1px solid rgba(239,68,68,0.20); color:#ef4444; }
   .btn-danger:hover { background: rgba(239,68,68,0.20); }
 
   /* Input */
   .input {
-    @apply w-full rounded-lg bg-ink-700 border border-ink-500 px-3 py-1.5 text-[13px] text-ink-50 tabular focus:outline-none focus:border-accent;
+    @apply w-full rounded-lg bg-white border border-paper-400 px-3 py-1.5 text-[13px] text-ink-900 tabular focus:outline-none focus:border-accent;
   }
   .input-num {
-    @apply rounded-lg bg-ink-700 border border-ink-500 px-3 py-1.5 text-[13px] font-semibold text-ink-50 tabular text-right focus:outline-none focus:border-accent;
+    @apply rounded-lg bg-white border border-paper-400 px-3 py-1.5 text-[13px] font-semibold text-ink-900 tabular text-right focus:outline-none focus:border-accent;
   }
 
   /* Chips */
   .chip {
     @apply text-[9px] font-bold uppercase tracking-[0.06em] px-1.5 py-0.5 rounded;
   }
-  .chip-muted { @apply chip bg-ink-500 text-ink-200; }
+  .chip-muted { @apply chip bg-paper-200 text-ink-500; }
   .chip-warn  { @apply chip; background: rgba(245,158,11,0.12); color:#f59e0b; }
   .chip-info  { @apply chip; background: rgba(96,165,250,0.12); color:#60a5fa; }
   .chip-green { @apply chip; background: rgba(74,222,128,0.12); color:#4ade80; }
 
   /* Bar / progress */
-  .bar       { @apply h-[5px] rounded-full overflow-hidden bg-ink-500; }
+  .bar       { @apply h-[5px] rounded-full overflow-hidden bg-paper-200; }
   .bar > div { @apply h-full rounded-full transition-[width] duration-500 ease-out bg-accent; }
 }
 
@@ -132,5 +132,5 @@ body {
   }
   .toast-success { @apply bg-accent/15 border-accent/40 text-accent; }
   .toast-error   { @apply text-danger; background: rgba(239,68,68,0.12); border-color: rgba(239,68,68,0.30); }
-  .toast-info    { @apply bg-ink-700 border-ink-500 text-ink-50; }
+  .toast-info    { @apply bg-white border-paper-300 text-ink-900; }
 }

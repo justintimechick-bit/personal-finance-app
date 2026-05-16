@@ -89,24 +89,24 @@ export default function Onboarding() {
   }
 
   return (
-    <div className="min-h-full bg-ink-900 text-ink-50">
+    <div className="min-h-full bg-paper-50 text-ink-900">
       <div className="max-w-4xl mx-auto p-6 md:p-10">
         <h1 className="text-3xl font-semibold mb-1">Welcome to Finance</h1>
-        <div className="text-sm text-ink-300 mb-8">Pick how you'd like to set up your data. You can change anything later.</div>
+        <div className="text-sm text-ink-400 mb-8">Pick how you'd like to set up your data. You can change anything later.</div>
 
 
         {!preview ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <button onClick={handleSeed} className="card p-6 text-left hover:bg-ink-700/30 transition-colors">
+            <button onClick={handleSeed} className="card p-6 text-left hover:bg-paper-100/30 transition-colors">
               <div className="text-lg font-semibold mb-2">Use sample template</div>
-              <div className="text-xs text-ink-300 leading-relaxed">
+              <div className="text-xs text-ink-400 leading-relaxed">
                 Loads a realistic example: a few accounts, a credit card, a student loan, biweekly paycheck, and typical fixed expenses. Best for trying out the app before committing.
               </div>
             </button>
 
             <div className="card p-6 flex flex-col">
               <div className="text-lg font-semibold mb-2">Import from Excel</div>
-              <div className="text-xs text-ink-300 leading-relaxed mb-4 flex-1">
+              <div className="text-xs text-ink-400 leading-relaxed mb-4 flex-1">
                 Download the template, fill it out in Excel, Numbers, or Google Sheets, then upload it back. Best if you already have your numbers somewhere.
               </div>
               <a
@@ -132,9 +132,9 @@ export default function Onboarding() {
               />
             </div>
 
-            <button onClick={handleFromScratch} className="card p-6 text-left hover:bg-ink-700/30 transition-colors">
+            <button onClick={handleFromScratch} className="card p-6 text-left hover:bg-paper-100/30 transition-colors">
               <div className="text-lg font-semibold mb-2">Start from scratch</div>
-              <div className="text-xs text-ink-300 leading-relaxed">
+              <div className="text-xs text-ink-400 leading-relaxed">
                 Empty workspace. You'll add accounts, liabilities, and expenses one at a time from the Accounts and Manage screens.
               </div>
             </button>
